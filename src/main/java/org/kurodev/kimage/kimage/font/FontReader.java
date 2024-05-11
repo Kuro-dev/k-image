@@ -123,8 +123,8 @@ public class FontReader {
         cmap.position(unicodeCmapOffset);
         int format = cmap.getShort();
         if (format != 4) {
-            logger.error("Unsupported cmap format");
-            return -1; // Only handling format 4 here for simplicity
+            logger.error("Unsupported cmap format {}", format);
+            return -1;
         }
         // Reading specific format 4
         cmap.getShort(); // length
@@ -151,17 +151,17 @@ public class FontReader {
         for (int i = 0; i < segCount; i++) {
             idRangeOffsets[i] = cmap.getShort();
         }
-        // Find the character code in the ranges
+        // Now i just need to find the character index
         for (int i = 0; i < segCount; i++) {
             if (character >= startCounts[i] && character <= endCounts[i]) {
                 int index;
                 if (idRangeOffsets[i] == 0) {
-                    index = (character + idDeltas[i]) % 65536;
+                    index = (character + idDeltas[i]) % 0x10000;
                 } else {
                     int offset = (character - startCounts[i]) * 2 + idRangeOffsets[i] + (i - segCount) * 2;
                     cmap.position(unicodeCmapOffset + offset);
                     index = cmap.getShort() + idDeltas[i];
-                    index = index % 65536;
+                    index = index % 0x10000;
                 }
                 return index;
             }

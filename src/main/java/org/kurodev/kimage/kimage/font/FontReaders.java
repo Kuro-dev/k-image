@@ -10,8 +10,8 @@ public class FontReaders {
 
     public static FontReader getDefaultFontReader() {
         if (defaultFontReader == null) {
-            try {
-                defaultFontReader = loadFont(FontReaders.class.getResourceAsStream("/kimage/Pixellettersfull.ttf"));
+            try (InputStream in = FontReaders.class.getResourceAsStream("/kimage/Pixellettersfull.ttf")) {
+                defaultFontReader = loadFont(in);
             } catch (IOException e) {
                 //should never happen
                 throw new RuntimeException(e);
@@ -22,7 +22,7 @@ public class FontReaders {
 
     /**
      * @param in non-null datasource of the font. .TTF format
-     * @throws IOException when an I/O error occurs
+     * @throws IOException          when an I/O error occurs
      * @throws NullPointerException if {@code in} is null
      */
     public static FontReader loadFont(InputStream in) throws IOException {
