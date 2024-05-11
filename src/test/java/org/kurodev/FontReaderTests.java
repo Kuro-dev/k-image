@@ -12,7 +12,7 @@ public class FontReaderTests {
 
     @Test
     public void advanceWidth() {
-        var glyph = reader.getGlyph('A');
+        var glyph = reader.getGlyph('B');
         System.out.println(glyph);
         assertEquals(36, glyph.getIndex());
         assertEquals(0, glyph.getxMin());

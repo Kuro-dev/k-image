@@ -3,6 +3,9 @@ package org.kurodev;
 import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.draw.DrawableImage;
 import java.awt.Color;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,5 +30,13 @@ public class DrawableImageTests {
         img.addCustomChunk("TEST", "THIS IS A TEST");
         DrawableImage img2 = DrawableImage.ofBytes(img.encode());
         assertArrayEquals(img.getChunk("TEST"), img2.getChunk("TEST"));
+    }
+
+    @Test
+    public void drawString() throws IOException {
+        DrawableImage img = new DrawableImage(800,800);
+        img.fillRect(0,0,800,800,Color.WHITE);
+        img.drawString(0,0,"B",Color.BLACK);
+        Files.write(Path.of("./test.png"), img.encode());
     }
 }

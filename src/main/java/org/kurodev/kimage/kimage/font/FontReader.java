@@ -1,5 +1,6 @@
 package org.kurodev.kimage.kimage.font;
 
+import org.kurodev.kimage.kimage.font.enums.FontTableEntry;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.enums.HheaTable;
 import org.kurodev.kimage.kimage.font.enums.MaxpTable;
@@ -75,6 +76,15 @@ public class FontReader {
         return Optional.empty();
     }
 
+    /**
+     * Tables that must always exist:
+     * "cmap", "glyf", "head", "hhea", "hmtx", "loca", "maxp", "name", "post"
+     * Some of these have been converted to Enum maps for better accessibility
+     *
+     * @see HeadTable
+     * @see HheaTable
+     * @see MaxpTable
+     */
     private ByteBuffer getTableDataUnsafe(String tag) {
         var optional = getTableEntry(tag);
         if (optional.isPresent()) {
@@ -88,6 +98,9 @@ public class FontReader {
         throw new IllegalStateException("Required table " + tag + " not present in file");
     }
 
+    /**
+     * <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM07/appendixB.html">Documentation</a>
+     */
     private int getGlyphIndex(char character) {
         ByteBuffer cmap = getTableDataUnsafe("cmap");
         // Skipping the cmap table header and subtable headers to focus on a simple format 4 subtable
@@ -110,7 +123,7 @@ public class FontReader {
         cmap.position(unicodeCmapOffset);
         int format = cmap.getShort();
         if (format != 4) {
-            logger.error("Unsupported cmap format for simple example");
+            logger.error("Unsupported cmap format");
             return -1; // Only handling format 4 here for simplicity
         }
         // Reading specific format 4
@@ -207,8 +220,19 @@ public class FontReader {
     }
 
 
-    private int getTableValue(HheaTable val) {
-        ByteBuffer hhea = getTableDataUnsafe("hhea");
+    /**
+     * Gets a value from a corresponding table.
+     *
+     * @see FontTableEntry
+     * @see HheaTable
+     * @see HeadTable
+     * @see MaxpTable
+     *
+     * @implNote This method is <b>unsafe</b> if not used with required tables.
+     * @see #getTableDataUnsafe(String)
+     */
+    private int getTableValue(FontTableEntry val) {
+        ByteBuffer hhea = getTableDataUnsafe(val.getTable());
         hhea.position(val.getPosition());
         if (val.isSigned()) {
             return hhea.getShort();
@@ -217,25 +241,6 @@ public class FontReader {
         }
     }
 
-    private int getTableValue(HeadTable val) {
-        ByteBuffer hhea = getTableDataUnsafe("head");
-        hhea.position(val.getPosition());
-        if (val.isSigned()) {
-            return hhea.getShort();
-        } else {
-            return hhea.getShort() & 0xFFFF;
-        }
-    }
-
-    private int getTableValue(MaxpTable val) {
-        ByteBuffer table = getTableDataUnsafe("maxp");
-        table.position(val.getPosition());
-        if (val.isSigned()) {
-            return table.getShort();
-        } else {
-            return table.getShort() & 0xFFFF;
-        }
-    }
 
     public record TableEntry(String tag, int checkSum, int offset, int length) {
     }
