@@ -102,6 +102,7 @@ public class SimpleFontGlyph {
      * @param flags  Array of flags for each point.
      * @return Array of Coordinates for each point.
      */
+    //TODO redo all of this, it does not work reliably
     private static Coordinate[] readCoordinates(ByteBuffer buffer, byte[] flags) {
         Coordinate[] coordinates = new Coordinate[flags.length];
         short x = 0, y = 0;

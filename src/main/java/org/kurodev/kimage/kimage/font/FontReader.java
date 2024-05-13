@@ -174,6 +174,7 @@ public class FontReader {
         return getGlyph(glyphIndex);
     }
 
+    //TODO redo all of this, it does not work reliably
     private SimpleFontGlyph getGlyph(int glyphIndex) {
         ByteBuffer glyf = getTableDataUnsafe("glyf");
         ByteBuffer loca = getTableDataUnsafe("loca");
