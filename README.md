@@ -17,6 +17,13 @@ Implement a way to decode TTF files to extract the glyphs and draw text to the s
 Feel free to help me implement and improve this functionality.
 it doesn't have to be perfect or support every functionality, it can be improved iteratively.
 
+# what I need help with
+
+I am struggling with extracting the glyph data as I seem to be skipping or over-reading some bytes somewhere. 
+Some glyphs have their coordinates messed up and I would like to reimplement that functionality from scratch. 
+no prior experience with TTF files necessary, 
+I can explain everything I know and theres extensive documentation available as well.
+
 # How to use
 
 ```java
