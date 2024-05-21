@@ -90,7 +90,7 @@ public class SimplePng {
             throw new IllegalArgumentException("Coordinates out of bounds");
         }
 
-        int index = (y * width + x) * 4; // 4 bytes per pixel (RGBA)
+        int index = (y * width + x) * 4;
         int red = imageData[index] & 0xFF;
         int green = imageData[index + 1] & 0xFF;
         int blue = imageData[index + 2] & 0xFF;
@@ -102,7 +102,7 @@ public class SimplePng {
     // Check if the image has an alpha channel
     boolean hasAlphaChannel() {
         for (byte pixel : alphaChannel) {
-            if (pixel != (byte) 255) { // If any alpha value is not fully opaque
+            if (pixel != (byte) 255) {
                 return true;
             }
         }

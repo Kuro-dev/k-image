@@ -20,7 +20,7 @@ public class SimplePngDecoder {
         registerChunkHandler("IDAT", this::handleIDAT);
         registerChunkHandler("IEND", data -> {
         });
-        registerChunkHandler("tRNS", this::handleTRNS); // Added handler for tRNS chunk
+        registerChunkHandler("tRNS", this::handleTRNS);
     }
 
     public void addChunkHandler(String chunkType, ChunkHandler handler) {
@@ -31,7 +31,7 @@ public class SimplePngDecoder {
         ByteArrayInputStream stream = new ByteArrayInputStream(pngData);
 
         // Skip PNG signature (8 bytes)
-        stream.skip(8);
+        stream.skip(8); //TODO: validate in the future
 
         while (stream.available() > 0) {
             // Read chunk length (4 bytes)
@@ -49,7 +49,7 @@ public class SimplePngDecoder {
             stream.read(data);
 
             // Skip CRC (4 bytes)
-            stream.skip(4);
+            stream.skip(4); //TODO: validate in the future
 
             // Handle the chunk
             ChunkHandler handler = chunkHandlers.get(type);
@@ -62,12 +62,10 @@ public class SimplePngDecoder {
     }
 
     private void handleIHDR(byte[] data) {
-        // Handle IHDR chunk data
         ByteBuffer buffer = ByteBuffer.wrap(data);
         int width = buffer.getInt();
         int height = buffer.getInt();
         pngHandler = new SimplePng(width, height);
-        // Additional IHDR data can be handled here
     }
 
     private void handleIDAT(byte[] data) {
@@ -92,10 +90,7 @@ public class SimplePngDecoder {
     }
 
     private void handleTRNS(byte[] data) {
-        // Handle tRNS chunk data if present
         // This chunk contains transparency information, such as a transparency palette or alpha channel
-        // Here, you would extract and process the alpha channel data if it's included
-        // For simplicity, assuming it's a grayscale image, the data represents alpha values directly
         byte[] alphaData = new byte[data.length];
         System.arraycopy(data, 0, alphaData, 0, data.length);
         pngHandler.setAlphaChannel(alphaData);
