@@ -73,6 +73,7 @@ public class FontReaderTests {
         assertEquals(46, reader.getTableValue(MaxpTable.MAX_SIZE_OF_INSTRUCTIONS));
         assertEquals(0, reader.getTableValue(MaxpTable.MAX_COMPONENT_ELEMENTS));
         assertEquals(0, reader.getTableValue(MaxpTable.MAX_COMPONENT_DEPTH));
-
     }
+
+    //TODO: also add tests of the same magnitude for Pixellettersfull.ttf
 }
