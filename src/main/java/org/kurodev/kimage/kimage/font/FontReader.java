@@ -4,6 +4,7 @@ import org.kurodev.kimage.kimage.font.enums.FontTableEntry;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.enums.HheaTable;
 import org.kurodev.kimage.kimage.font.enums.MaxpTable;
+import org.kurodev.kimage.kimage.font.glyph.SimpleFontGlyph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -224,24 +225,37 @@ public class FontReader {
     /**
      * Gets a value from a corresponding table.
      *
+     * @implNote This method is <b>unsafe</b> if not used with required tables.
      * @see FontTableEntry
      * @see HheaTable
      * @see HeadTable
      * @see MaxpTable
-     *
-     * @implNote This method is <b>unsafe</b> if not used with required tables.
      * @see #getTableDataUnsafe(String)
      */
-    private int getTableValue(FontTableEntry val) {
-        ByteBuffer hhea = getTableDataUnsafe(val.getTable());
-        hhea.position(val.getPosition());
-        if (val.isSigned()) {
-            return hhea.getShort();
-        } else {
-            return hhea.getShort() & 0xFFFF;
+    public int getTableValue(FontTableEntry val) {
+        ByteBuffer table = getTableDataUnsafe(val.getTable());
+        table.position(val.getPosition());
+        switch (val.getBytes()) {
+            case 1 -> {
+                return table.get() & 0xFF;
+            }
+            case 2 -> {
+                if (val.isSigned()) {
+                    return table.getShort();
+                } else {
+                    return table.getShort() & 0xFFFF;
+                }
+            }
+            case 4 -> {
+                if (val.isSigned()) {
+                    return table.getInt();
+                } else {
+                    return (int) (table.getInt() & 0xFFFFFFFFL);
+                }
+            }
+            default -> throw new RuntimeException("unsupported length");
         }
     }
-
 
     public record TableEntry(String tag, int checkSum, int offset, int length) {
     }

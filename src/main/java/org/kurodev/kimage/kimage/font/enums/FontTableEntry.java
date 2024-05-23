@@ -29,4 +29,5 @@ public interface FontTableEntry {
      */
 
     boolean isSigned();
+
 }

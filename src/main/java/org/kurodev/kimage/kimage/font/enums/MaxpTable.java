@@ -104,5 +104,10 @@ public enum MaxpTable implements FontTableEntry {
         }
         return position;
     }
+
+    @Override
+    public String toString() {
+        return getTable() + "." + name() + "(" + getBytes() + ")";
+    }
 }
 

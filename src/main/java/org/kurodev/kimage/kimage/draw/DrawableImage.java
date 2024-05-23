@@ -1,7 +1,8 @@
 package org.kurodev.kimage.kimage.draw;
 
 import org.kurodev.kimage.kimage.font.FontReader;
-import org.kurodev.kimage.kimage.font.SimpleFontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+import org.kurodev.kimage.kimage.font.glyph.SimpleFontGlyph;
 import org.kurodev.kimage.kimage.img.ChunkHandler;
 import org.kurodev.kimage.kimage.img.SimplePng;
 import org.kurodev.kimage.kimage.img.SimplePngDecoder;
@@ -229,7 +230,7 @@ public class DrawableImage implements KImage {
             return this;
         }
 
-        SimpleFontGlyph.Coordinate[] coordinates = glyph.getCoordinates();
+        Coordinate[] coordinates = glyph.getCoordinates();
         int[] endPts = glyph.getEndPtsOfContours();
         int startPt = 0;
         List<Color> colors = List.of(Color.RED, Color.BLUE, Color.CYAN);
@@ -238,12 +239,12 @@ public class DrawableImage implements KImage {
             int endPt = endPts[contour];
             logger.info("Drawing contour: {}", contour);
             for (int pt = startPt; pt < endPt; pt++) {
-                SimpleFontGlyph.Coordinate start = coordinates[pt];
-                SimpleFontGlyph.Coordinate end = coordinates[pt + 1];
+                Coordinate start = coordinates[pt];
+                Coordinate end = coordinates[pt + 1];
                 drawLine(start.x() + x, start.y() + y, end.x() + x, end.y() + y, color, 5);
             }
-            SimpleFontGlyph.Coordinate first = coordinates[startPt];
-            SimpleFontGlyph.Coordinate last = coordinates[endPt];
+            Coordinate first = coordinates[startPt];
+            Coordinate last = coordinates[endPt];
             drawLine(last.x() + x, last.y() + y, first.x() + x, first.y() + y, color, 5);
 
             startPt = endPt + 1;

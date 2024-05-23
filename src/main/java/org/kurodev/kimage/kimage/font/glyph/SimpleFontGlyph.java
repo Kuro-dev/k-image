@@ -1,4 +1,4 @@
-package org.kurodev.kimage.kimage.font;
+package org.kurodev.kimage.kimage.font.glyph;
 
 import org.kurodev.kimage.kimage.font.enums.GlyphFlag;
 import org.slf4j.Logger;
@@ -150,7 +150,7 @@ public class SimpleFontGlyph {
         return advanceWidth;
     }
 
-    void setAdvanceWidth(int advanceWidth) {
+    public void setAdvanceWidth(int advanceWidth) {
         this.advanceWidth = advanceWidth;
     }
 
@@ -211,10 +211,8 @@ public class SimpleFontGlyph {
         return index;
     }
 
-    void setIndex(int index) {
+    public void setIndex(int index) {
         this.index = index;
     }
 
-    public record Coordinate(short x, short y, List<GlyphFlag> flags) {
-    }
 }
