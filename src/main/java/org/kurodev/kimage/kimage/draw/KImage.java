@@ -5,9 +5,6 @@ import org.kurodev.kimage.kimage.font.FontReaders;
 import org.kurodev.kimage.kimage.img.SimplePng;
 
 import java.awt.*;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public interface KImage {
     static KImage empty(int width, int height) {
@@ -19,14 +16,18 @@ public interface KImage {
     }
 
     default KImage drawString(int x, int y, String str) {
-        return drawString(x, y, str, Color.BLACK, FontReaders.getDefaultFontReader());
+        return drawString(x, y, str, 0.5);
     }
 
-    default KImage drawString(int x, int y, String str, Color color) {
-        return drawString(x, y, str, color, FontReaders.getDefaultFontReader());
+    default KImage drawString(int x, int y, String str, double scale) {
+        return drawString(x, y, str, Color.BLACK, FontReaders.getDefaultFontReader(), scale);
     }
 
-    KImage drawString(int x, int y, String str, Color color, FontReader font);
+    default KImage drawString(int x, int y, String str, Color color, double scale) {
+        return drawString(x, y, str, color, FontReaders.getDefaultFontReader(), scale);
+    }
+
+    KImage drawString(int x, int y, String str, Color color, FontReader font, double scale);
 
     KImage drawPixel(int x, int y, Color color);
 

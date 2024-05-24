@@ -224,7 +224,7 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color) {
+    private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
         if (glyph.getNumberOfContours() == 0) {
             // ignore empty glyphs such as .notdef and spaces etc.
             return this;
@@ -234,7 +234,8 @@ public class DrawableImage implements KImage {
         int[] endPts = glyph.getEndPtsOfContours();
         int startPt = 0;
         int currentX = x;
-        int currentY = y;
+        int currentY = (int) (y + (glyph.getyMax() * scale));
+        drawLine(0, currentY, getPng().getWidth(), currentY, Color.BLACK); //remove this line when debugging is done
 
         for (int contour = 0; contour < glyph.getNumberOfContours(); contour++) {
             int endPt = endPts[contour];
@@ -249,8 +250,8 @@ public class DrawableImage implements KImage {
                 if (firstPointOfContour == null) {
                     firstPointOfContour = offset;
                 }
-                int nextX = currentX + offset.x();
-                int nextY = currentY + offset.y();
+                int nextX = currentX + (int) (offset.x() * scale);
+                int nextY = currentY + (int) (offset.y() * scale);
 
                 if (pt > startPt) {
                     drawLine(currentX, currentY, nextX, nextY, color, 5);
@@ -262,7 +263,7 @@ public class DrawableImage implements KImage {
 
             assert firstPointOfContour != null;
             // Draw closing line from last point to the first point in the contour
-            drawLine(currentX, currentY, startPointX + firstPointOfContour.x(), startPointY + firstPointOfContour.y(), color, 5);
+            drawLine(currentX, currentY, startPointX + (int) (firstPointOfContour.x() * scale), startPointY + (int) (firstPointOfContour.y() * scale), color, 5);
 
             startPt = endPt + 1;
         }
@@ -270,12 +271,13 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    public KImage drawString(int x, int y, String str, Color color, FontReader font) {
+
+    public KImage drawString(int x, int y, String str, Color color, FontReader font, double scale) {
         for (int i = 0; i < str.length(); i++) {
             var glyph = font.getGlyph(str.charAt(i));
             logger.info("Drawing glyph {} at {}x{}", glyph, x, y);
-            drawGlyph(x, y, glyph, color);
-            x += glyph.getAdvanceWidth();
+            drawGlyph(x, y, glyph, color, scale);
+            x += (int) (glyph.getAdvanceWidth() * scale);
         }
         return this;
     }

@@ -38,7 +38,7 @@ public class DrawableImageTests {
     public void drawString() throws IOException {
         DrawableImage img = new DrawableImage(1500, 800);
         img.fill(Color.WHITE);
-        img.drawString(0, 0, "AB", Color.BLACK);
+        img.drawString(0, 0, "ABCD");
 
         Files.write(Path.of("./test.png"), img.encode());
     }
