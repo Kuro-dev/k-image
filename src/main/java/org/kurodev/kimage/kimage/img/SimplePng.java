@@ -1,11 +1,14 @@
 package org.kurodev.kimage.kimage.img;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.*;
 import java.util.Arrays;
 import java.util.Objects;
 
 public class SimplePng {
-
+    private static final Logger logger = LoggerFactory.getLogger(SimplePng.class);
     private int height;
     private int width;
     private byte[] imageData;
@@ -63,8 +66,8 @@ public class SimplePng {
      */
     public void writeColor(int x, int y, int red, int green, int blue, int alpha) {
         if (x < 0 || y < 0 || x >= width || y >= height) {
-            String msg = String.format("Coordinates out of bounds %dx%d for image of size %dx%d", x, y, width, height);
-            throw new IllegalArgumentException(msg);
+            logger.warn("Attempted to draw out of bounds [{}|{}] for image of size [{}|{}]", x, y, width, height);
+            return;
         }
 
         int index = (y * width + x) * 4; // 4 bytes per pixel (RGBA)

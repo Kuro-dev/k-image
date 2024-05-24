@@ -272,6 +272,20 @@ public class DrawableImage implements KImage {
     }
 
 
+
+    public DrawableImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps) {
+        double stepSize = 1.0 / steps;
+        Coordinate previous = start;
+        for (int i = 1; i <= steps; i++) {
+            double t = stepSize * i;
+            double x = Math.pow(1 - t, 2) * start.x() + 2 * t * (1 - t) * curve.x() + Math.pow(t, 2) * end.x();
+            double y = Math.pow(1 - t, 2) * start.y() + 2 * t * (1 - t) * curve.y() + Math.pow(t, 2) * end.y();
+            drawLine(previous.x(), previous.y(), (int) x, (int) y, color);
+            previous = new Coordinate((int) x, (int) y); // Update previous point
+        }
+        return this;
+    }
+
     public KImage drawString(int x, int y, String str, Color color, FontReader font, double scale) {
         for (int i = 0; i < str.length(); i++) {
             var glyph = font.getGlyph(str.charAt(i));

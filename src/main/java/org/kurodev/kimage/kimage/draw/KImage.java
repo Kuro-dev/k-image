@@ -2,6 +2,7 @@ package org.kurodev.kimage.kimage.draw;
 
 import org.kurodev.kimage.kimage.font.FontReader;
 import org.kurodev.kimage.kimage.font.FontReaders;
+import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 import org.kurodev.kimage.kimage.img.SimplePng;
 
 import java.awt.*;
@@ -74,4 +75,18 @@ public interface KImage {
      */
     KImage fill(Color color);
 
+    /**
+     * Draws a Bézier curve based on three control points.
+     *
+     * @param start marks the start of the curve
+     * @param end   End point, the curve ends here :)
+     * @param curve This is the curve itself, the point that "drags" the line between start and end towards itself
+     * @param color The color of the curve.
+     * @param steps The number of steps to use for drawing the curve (higher values result in smoother curves).
+     */
+    KImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps);
+
+    default KImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color) {
+        return drawBezierCurve(start, end, curve, color, 300);
+    }
 }

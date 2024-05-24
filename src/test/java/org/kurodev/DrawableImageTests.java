@@ -2,6 +2,8 @@ package org.kurodev;
 
 import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.draw.DrawableImage;
+import org.kurodev.kimage.kimage.draw.KImage;
+import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 
 import java.awt.*;
 import java.io.IOException;
@@ -36,10 +38,10 @@ public class DrawableImageTests {
 
     @Test
     public void drawString() throws IOException {
-        DrawableImage img = new DrawableImage(1500, 800);
+        KImage img = new DrawableImage(1500, 800);
         img.fill(Color.WHITE);
         img.drawString(0, 0, "ABCD");
-
+        img.drawBezierCurve(new Coordinate(0, 800), new Coordinate(1500, 0), new Coordinate(1500, 800), Color.BLACK, 100);
         Files.write(Path.of("./test.png"), img.encode());
     }
 }
