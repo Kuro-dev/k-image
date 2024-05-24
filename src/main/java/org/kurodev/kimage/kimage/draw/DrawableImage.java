@@ -2,7 +2,7 @@ package org.kurodev.kimage.kimage.draw;
 
 import org.kurodev.kimage.kimage.font.FontReader;
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
-import org.kurodev.kimage.kimage.font.glyph.SimpleFontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 import org.kurodev.kimage.kimage.img.ChunkHandler;
 import org.kurodev.kimage.kimage.img.SimplePng;
 import org.kurodev.kimage.kimage.img.SimplePngDecoder;
@@ -224,31 +224,49 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    private KImage drawGlyph(int x, int y, SimpleFontGlyph glyph, Color color) {
+    private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color) {
         if (glyph.getNumberOfContours() == 0) {
-            // No drawing needed for glyphs without contours (e.g., space character)
+            // ignore empty glyphs such as .notdef and spaces etc.
             return this;
         }
 
-        Coordinate[] coordinates = glyph.getCoordinates();
+        List<Coordinate> coordinates = glyph.getCoordinates();
         int[] endPts = glyph.getEndPtsOfContours();
         int startPt = 0;
-        List<Color> colors = List.of(Color.RED, Color.BLUE, Color.CYAN);
+        int currentX = x;
+        int currentY = y;
+
         for (int contour = 0; contour < glyph.getNumberOfContours(); contour++) {
-            color = colors.get(contour);
             int endPt = endPts[contour];
             logger.info("Drawing contour: {}", contour);
-            for (int pt = startPt; pt < endPt; pt++) {
-                Coordinate start = coordinates[pt];
-                Coordinate end = coordinates[pt + 1];
-                drawLine(start.x() + x, start.y() + y, end.x() + x, end.y() + y, color, 5);
+            Coordinate firstPointOfContour = null;
+            // Store starting point of the contour
+            int startPointX = currentX;
+            int startPointY = currentY;
+
+            for (int pt = startPt; pt <= endPt; pt++) {
+                Coordinate offset = coordinates.get(pt);
+                if (firstPointOfContour == null) {
+                    firstPointOfContour = offset;
+                }
+                int nextX = currentX + offset.x();
+                int nextY = currentY + offset.y();
+
+                if (pt > startPt) {
+                    drawLine(currentX, currentY, nextX, nextY, color, 5);
+                }
+
+                currentX = nextX;
+                currentY = nextY;
             }
-            Coordinate first = coordinates[startPt];
-            Coordinate last = coordinates[endPt];
-            drawLine(last.x() + x, last.y() + y, first.x() + x, first.y() + y, color, 5);
+
+            assert firstPointOfContour != null;
+            // Draw closing line from last point to the first point in the contour
+            drawLine(currentX, currentY, startPointX + firstPointOfContour.x(), startPointY + firstPointOfContour.y(), color, 5);
 
             startPt = endPt + 1;
         }
+
         return this;
     }
 

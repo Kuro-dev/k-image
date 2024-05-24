@@ -36,11 +36,9 @@ public class DrawableImageTests {
 
     @Test
     public void drawString() throws IOException {
-        DrawableImage img = new DrawableImage(800, 800);
-        for (int i = 0; i < 2000; i++) {
-            img.fillRect(0, 0, 800, 800, Color.WHITE);
-            img.drawString(0, 0, "B", Color.BLACK);
-        }
+        DrawableImage img = new DrawableImage(1500, 800);
+        img.fill(Color.WHITE);
+        img.drawString(0, 0, "AB", Color.BLACK);
 
         Files.write(Path.of("./test.png"), img.encode());
     }

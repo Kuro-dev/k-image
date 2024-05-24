@@ -4,7 +4,8 @@ import org.kurodev.kimage.kimage.font.enums.FontTableEntry;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.enums.HheaTable;
 import org.kurodev.kimage.kimage.font.enums.MaxpTable;
-import org.kurodev.kimage.kimage.font.glyph.SimpleFontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.GlyphFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +103,7 @@ public class FontReader {
     /**
      * <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM07/appendixB.html">Documentation</a>
      */
-    private int getGlyphIndex(char character) {
+    public int getGlyphIndex(char character) {
         ByteBuffer cmap = getTableDataUnsafe("cmap");
         // Skipping the cmap table header and subtable headers to focus on a simple format 4 subtable
         cmap.position(cmap.position() + 2); // skip version
@@ -170,55 +171,57 @@ public class FontReader {
         return 0; // not found, returning .notdef index
     }
 
-    public SimpleFontGlyph getGlyph(char character) {
-        int glyphIndex = getGlyphIndex(character);
-        return getGlyph(glyphIndex);
+    public FontGlyph getGlyph(String character) {
+        if (character.length() != 1) {
+            throw new IllegalArgumentException("Can only identify one glyph at the time");
+        }
+        return getGlyph(character.charAt(0));
     }
 
-    //TODO redo all of this, it does not work reliably
-    private SimpleFontGlyph getGlyph(int glyphIndex) {
+    public FontGlyph getGlyph(char character) {
+        int glyphIndex = getGlyphIndex(character);
         ByteBuffer glyf = getTableDataUnsafe("glyf");
         ByteBuffer loca = getTableDataUnsafe("loca");
-        loca.position(glyphIndex * 2); // short format offset, multiply by 2
-        int glyphOffset = loca.getShort() * 2; // actual offset in the glyf table
+
+        int indexToLocFormat = getTableValue(HeadTable.INDEX_TO_LOC_FORMAT);
+        int glyphOffset;
+        int nextGlyphOffset;
+
+        if (indexToLocFormat == 0) {
+            glyphOffset = loca.getShort(glyphIndex * 2) * 2;
+            nextGlyphOffset = loca.getShort((glyphIndex + 1) * 2) * 2;
+        } else {
+            glyphOffset = loca.getInt(glyphIndex * 4);
+            nextGlyphOffset = loca.getInt((glyphIndex + 1) * 4);
+        }
+
+        if (glyphOffset == nextGlyphOffset) {
+            return null; // This glyph has no outline data.
+        }
+
         glyf.position(glyphOffset);
         short numberOfContours = glyf.getShort();
-        if (numberOfContours >= 0) {
-            var out = SimpleFontGlyph.readGlyph(glyf, numberOfContours);
-            out.setAdvanceWidth(getAdvanceWidth(glyphIndex));
-            out.setIndex(glyphIndex);
-            return out;
+
+        if (numberOfContours < 0) {
+            throw new IllegalStateException("Composite glyphs are not supported yet.");
         }
-        logger.warn("Compound glyphs aren't supported yet");
-        return null;
+
+        return GlyphFactory.readSimpleGlyph(glyf, numberOfContours, glyphOffset, character, getAdvanceWidth(glyphIndex));
     }
 
     /**
      * @return The advanceWidth as an unsigned short value
      */
-    private Integer getAdvanceWidth(int glyphIndex) {
+    public int getAdvanceWidth(int glyphIndex) {
         ByteBuffer hmtx = getTableDataUnsafe("hmtx");
-        int numGlyphs = getTableValue(MaxpTable.NUM_OF_GLYPHS);
+        int numberOfHMetrics = getTableValue(HheaTable.NUM_OF_LONG_HOR_METRICS);
 
-        if (glyphIndex >= numGlyphs) {
-            throw new IndexOutOfBoundsException("Glyph index " + glyphIndex + " is out of bounds. Max: " + numGlyphs);
-        }
-
-        int numberOfLongHorMetrics = getTableValue(HheaTable.NUM_OF_LONG_HOR_METRICS);
-        int advanceWidthPosition;
-
-        if (glyphIndex < numberOfLongHorMetrics) {
-            // If the glyph index is within the range of numberOfLongHorMetrics, use its own width
-            advanceWidthPosition = glyphIndex * 2;
+        if (glyphIndex < numberOfHMetrics) {
+            return hmtx.getShort(glyphIndex * 4) & 0xFFFF;
         } else {
-            // If the glyph index is beyond the range, all glyphs use the last width
-            advanceWidthPosition = (numberOfLongHorMetrics - 1) * 2;
+            int lastAdvanceWidth = hmtx.getShort((numberOfHMetrics - 1) * 4) & 0xFFFF;
+            return lastAdvanceWidth;
         }
-
-        hmtx.position(advanceWidthPosition);
-        int advanceWidth = hmtx.getShort() & 0xFFFF;
-
-        return advanceWidth;
     }
 
 

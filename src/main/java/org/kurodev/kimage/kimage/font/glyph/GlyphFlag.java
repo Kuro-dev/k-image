@@ -1,4 +1,4 @@
-package org.kurodev.kimage.kimage.font.enums;
+package org.kurodev.kimage.kimage.font.glyph;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,27 +11,27 @@ public enum GlyphFlag {
     /**
      * If set, the point is on the curve; otherwise, it is off the curve.
      */
-    ON_CURVE(0x01),
+    ON_CURVE(0b1),
 
     /**
      * If set, the corresponding x-coordinate is 1 byte long. If not set, it is 2 bytes.
      * If the x-coordinate is not set to be repeated, this flag also indicates that the
      * x-coordinate is the same as the previous x-coordinate.
      */
-    X_SHORT_VECTOR(0x02),
+    X_SHORT_VECTOR(0b10),
 
     /**
      * If set, the corresponding y-coordinate is 1 byte long. If not set, it is 2 bytes.
      * If the y-coordinate is not set to be repeated, this flag also indicates that the
      * y-coordinate is the same as the previous y-coordinate.
      */
-    Y_SHORT_VECTOR(0x04),
+    Y_SHORT_VECTOR(0b100),
 
     /**
      * If set, the next byte specifies the number of additional times this flag is to be
      * repeated in the logical array of flags. This is used to compress the flag data.
      */
-    REPEAT_FLAG(0x08),
+    REPEAT_FLAG(0b1000),
 
     /**
      * This flag has two meanings, depending on how the X_SHORT_VECTOR flag is set.
@@ -40,7 +40,7 @@ public enum GlyphFlag {
      * If X_SHORT_VECTOR is not set and this flag is set, then the current x-coordinate
      * is the same as the previous x-coordinate.
      */
-    X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR(0x10),
+    X_IS_SAME_OR_POSITIVE_X_SHORT_VECTOR(0b10000),
 
     /**
      * This flag has two meanings, depending on how the Y_SHORT_VECTOR flag is set.
@@ -49,7 +49,7 @@ public enum GlyphFlag {
      * If Y_SHORT_VECTOR is not set and this flag is set, then the current y-coordinate
      * is the same as the previous y-coordinate.
      */
-    Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR(0x20);
+    Y_IS_SAME_OR_POSITIVE_Y_SHORT_VECTOR(0b100000);
 
     private final int bit;
 

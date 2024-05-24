@@ -5,6 +5,9 @@ import org.kurodev.kimage.kimage.font.FontReaders;
 import org.kurodev.kimage.kimage.img.SimplePng;
 
 import java.awt.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public interface KImage {
     static KImage empty(int width, int height) {
@@ -69,4 +72,5 @@ public interface KImage {
      * Fills the entire image with a specific color.
      */
     KImage fill(Color color);
+
 }
