@@ -1,7 +1,7 @@
 package org.kurodev.kimage.kimage.draw;
 
-import org.kurodev.kimage.kimage.font.FontReader;
 import org.kurodev.kimage.kimage.font.FontReaders;
+import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 import org.kurodev.kimage.kimage.img.SimplePng;
 
@@ -28,7 +28,7 @@ public interface KImage {
         return drawString(x, y, str, color, FontReaders.getDefaultFontReader(), scale);
     }
 
-    KImage drawString(int x, int y, String str, Color color, FontReader font, double scale);
+    KImage drawString(int x, int y, String str, Color color, KFont font, double scale);
 
     KImage drawPixel(int x, int y, Color color);
 

@@ -47,7 +47,7 @@ public class GeneralFontTests {
 
     @BeforeAll
     public static void prepare() throws IOException {
-        font = FontReaders.loadFont(FontReaders.class.getResourceAsStream("/kimage/Pixelletters.ttf"));
+        font = (FontReader) FontReaders.loadFont(FontReaders.class.getResourceAsStream("/kimage/Pixelletters.ttf"));
     }
 
     @Test

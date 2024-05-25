@@ -6,9 +6,9 @@ import java.io.InputStream;
 import java.util.Objects;
 
 public class FontReaders {
-    private static FontReader defaultFontReader;
+    private static KFont defaultFontReader;
 
-    public static FontReader getDefaultFontReader() {
+    public static KFont getDefaultFontReader() {
         if (defaultFontReader == null) {
             try (InputStream in = FontReaders.class.getResourceAsStream("/kimage/Pixellettersfull.ttf")) {
                 defaultFontReader = loadFont(in);
@@ -25,7 +25,7 @@ public class FontReaders {
      * @throws IOException          when an I/O error occurs
      * @throws NullPointerException if {@code in} is null
      */
-    public static FontReader loadFont(InputStream in) throws IOException {
+    public static KFont loadFont(InputStream in) throws IOException {
         Objects.requireNonNull(in);
         FontReader reader = new FontReader();
         reader.load(new DataInputStream(in));

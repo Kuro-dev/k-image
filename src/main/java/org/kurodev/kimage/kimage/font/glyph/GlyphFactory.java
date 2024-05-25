@@ -72,4 +72,16 @@ public class GlyphFactory {
                 .setAdvanceWidth(advanceWidth)
                 .createSimpleFontGlyph();
     }
+
+    public static FontGlyph createWhitespace(char character, int advanceWidth) {
+        return new SimpleFontGlyphBuilder()
+                .setNumberOfContours(0)
+                .setxMin(0)
+                .setyMin(0)
+                .setxMax(0)
+                .setyMax(0)
+                .setCharacter(character)
+                .setAdvanceWidth(advanceWidth)
+                .createSimpleFontGlyph();
+    }
 }

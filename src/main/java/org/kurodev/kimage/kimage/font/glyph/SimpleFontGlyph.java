@@ -58,6 +58,15 @@ public class SimpleFontGlyph implements FontGlyph {
         return numberOfContours;
     }
 
+    @Override
+    public String toString() {
+        return "SimpleFontGlyph{" +
+                "character=" + character +
+                ", numberOfContours=" + numberOfContours +
+                ", advanceWidth=" + advanceWidth +
+                '}';
+    }
+
     public int getxMin() {
         return xMin;
     }

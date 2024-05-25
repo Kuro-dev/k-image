@@ -17,7 +17,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-public class FontReader {
+public class FontReader implements KFont {
     private static final Logger logger = LoggerFactory.getLogger(FontReader.class);
 
     private byte[] data;
@@ -196,7 +196,7 @@ public class FontReader {
         }
 
         if (glyphOffset == nextGlyphOffset) {
-            return null; // This glyph has no outline data.
+            return GlyphFactory.createWhitespace(character, getAdvanceWidth(getAdvanceWidth(glyphIndex))); // This glyph has no outline data.
         }
 
         glyf.position(glyphOffset);
