@@ -178,6 +178,11 @@ public class FontReader implements KFont {
         return getGlyph(character.charAt(0));
     }
 
+    @Override
+    public int getLowestRecommendedPPEM() {
+        return getTableValue(HeadTable.LOWEST_RECOMMENDED_PPEM);
+    }
+
     public FontGlyph getGlyph(char character) {
         int glyphIndex = getGlyphIndex(character);
         ByteBuffer glyf = getTableDataUnsafe("glyf");

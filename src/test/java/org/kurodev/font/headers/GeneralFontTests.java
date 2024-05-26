@@ -4,11 +4,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.font.FontReader;
 import org.kurodev.kimage.kimage.font.FontReaders;
+import org.kurodev.kimage.kimage.font.KFont;
+import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.kurodev.font.headers.Helper.createPointArray;
+import static org.kurodev.font.headers.Helper.coordinatesForLetterA;
 
 public class GeneralFontTests {
 
@@ -42,7 +44,6 @@ public class GeneralFontTests {
             new LetterEntry('Z', 29, 448),
     };
 
-    private static final  Point[] pointsForLetterA = createPointArray();
     private static FontReader font;
 
     @BeforeAll
@@ -65,15 +66,21 @@ public class GeneralFontTests {
     }
 
     @Test
-    public void testBasicFontData() {
+    public void testBasicFontData() throws IOException {
+        KFont font =  FontReaders.loadFont(FontReaders.class.getResourceAsStream("/kimage/Pixellettersfull.ttf"));
         var glyph = font.getGlyph('A');
         var coordinates = glyph.getCoordinates();
-        assertEquals(pointsForLetterA.length, coordinates.size(), "read coordinates differ in size");
-        for (int i = 0; i < coordinates.size(); i++) {
-            var actual = coordinates.get(i);
-            var expected = pointsForLetterA[i];
-            assertEquals(expected.x, actual.x(), "X coordinate for " + actual + " does not match. expected: " + expected);
-            assertEquals(expected.y, actual.y(), "y coordinate for " + actual + " does not match. expected: " + expected);
+        assertEquals(coordinatesForLetterA.length, coordinates.length, "read coordinates differ in size");
+        for (int contourIndex = 0; contourIndex < coordinatesForLetterA.length; contourIndex++) {
+            Coordinate[] expectedContour = coordinatesForLetterA[contourIndex];
+            Coordinate[] actualContour = coordinates[contourIndex];
+            assertEquals(expectedContour.length, actualContour.length, "read contour differs in size in contour "+ contourIndex);
+            for (int coordinate = 0; coordinate < expectedContour.length; coordinate++) {
+                Coordinate expected = expectedContour[coordinate];
+                Coordinate actual = actualContour[coordinate];
+                actual.flags().clear(); //the expected values don't have flags, we care strictly about coordinates right now.
+                assertEquals(expected, actual);
+            }
         }
     }
 

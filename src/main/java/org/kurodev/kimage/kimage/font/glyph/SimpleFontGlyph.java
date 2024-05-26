@@ -114,12 +114,32 @@ public class SimpleFontGlyph implements FontGlyph {
     }
 
     @Override
-    public List<Coordinate> getCoordinates() {
-        List<Coordinate> coordinates = new ArrayList<>();
-        for (int i = 0; i < xCoordinates.length; i++) {
-            List<GlyphFlag> glyphFlags = GlyphFlag.identify(flags[i]);
-            coordinates.add(new Coordinate(xCoordinates[i], yCoordinates[i], glyphFlags));
+    public Coordinate[][] getCoordinates() {
+        int currentX = 0;
+        int currentY = 0;
+
+        Coordinate[][] coordinates = new Coordinate[numberOfContours][];
+
+        int pointIndex = 0;
+
+        for (int contourIndex = 0; contourIndex < numberOfContours; contourIndex++) {
+            int contourSize = (contourIndex == 0) ? endPtsOfContours[contourIndex] + 1
+                    : endPtsOfContours[contourIndex] - endPtsOfContours[contourIndex - 1];
+
+            Coordinate[] contour = new Coordinate[contourSize];
+
+            for (int i = 0; i < contourSize; i++) {
+                currentX += xCoordinates[pointIndex];
+                currentY += yCoordinates[pointIndex] * -1; //inverting Y to make the glyph draw upwards instead of downwards.
+
+                contour[i] = new Coordinate(currentX, currentY);
+
+                pointIndex++;
+            }
+
+            coordinates[contourIndex] = contour;
         }
+
         return coordinates;
     }
 }

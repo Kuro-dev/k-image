@@ -1,37 +1,76 @@
 package org.kurodev.font.headers;
 
+import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+
 /**
  * generated using ChatGPT with data coordinate extracted using FontDrop.
  * All the points for the letter "A"
  */
 public class Helper {
-    public static GeneralFontTests.Point[] createPointArray() {
-        int[][] coordinates = {
-                {320, 0}, {320, 64}, {320, 128}, {320, 192}, {320, 256}, {320, 320},
-                {256, 320}, {192, 320}, {128, 320}, {64, 320}, {64, 256}, {64, 192},
-                {64, 128}, {64, 64}, {64, 0}, {0, 0}, {0, 64}, {0, 128}, {0, 192},
-                {0, 256}, {0, 320}, {0, 384}, {0, 448}, {0, 512}, {0, 576}, {0, 640},
-                {0, 704}, {64, 704}, {64, 640}, {64, 576}, {64, 512}, {64, 448},
-                {64, 384}, {128, 384}, {192, 384}, {256, 384}, {320, 384}, {320, 448},
-                {320, 512}, {320, 576}, {320, 640}, {320, 704}, {384, 704}, {384, 640},
-                {384, 576}, {384, 512}, {384, 448}, {384, 384}, {384, 320}, {384, 256},
-                {384, 192}, {384, 128}, {384, 64}, {384, 0}, {320, 704}, {256, 704},
-                {192, 704}, {128, 704}, {64, 704}, {64, 768}, {128, 768}, {192, 768},
-                {256, 768}, {320, 768}
-        };
 
-        GeneralFontTests.Point[] points = new GeneralFontTests.Point[coordinates.length];
-        int prevX = 0;
-        int prevY = 0;
+    /**
+     * Coordinates from fontDrop with negative Y coordinates.
+     * Pixellettersfull.ttf
+     */
+    public static final Coordinate[][] coordinatesForLetterA = {
+            {
+                    new Coordinate(384, 0),
+                    new Coordinate(384, -64),
+                    new Coordinate(384, -128),
+                    new Coordinate(448, -128),
+                    new Coordinate(448, -64),
+                    new Coordinate(448, 0)
+            },
+            {
+                    new Coordinate(0, 0),
+                    new Coordinate(0, -64),
+                    new Coordinate(0, -128),
+                    new Coordinate(64, -128),
+                    new Coordinate(64, -64),
+                    new Coordinate(64, 0)
+            },
+            {
+                    new Coordinate(384, -128),  //x=384 y=128
+                    new Coordinate(320, -128),  //x=320 y=128
+                    new Coordinate(256, -128),  //x=256 y=128
+                    new Coordinate(192, -128),  //x=192 y=128
+                    new Coordinate(128, -128),  //x=128 y=128
+                    new Coordinate(64, -128),   //x=64 y=128
+                    new Coordinate(64, -192),   //x=64 y=192
+                    new Coordinate(64, -256),   //x=64 y=256
+                    new Coordinate(128, -256),  //x=128 y=256
+                    new Coordinate(128, -192),  //x=128 y=192
+                    new Coordinate(192, -192),  //x=192 y=192
+                    new Coordinate(256, -192),  //x=256 y=192
+                    new Coordinate(320, -192),  //x=320 y=192
+                    new Coordinate(320, -256),  //x=320 y=256
+                    new Coordinate(384, -256),  //x=384 y=256
+                    new Coordinate(384, -192),  //x=384 y=192
+            },
+            {
+                    new Coordinate(320, -256),
+                    new Coordinate(256, -256),
+                    new Coordinate(256, -320),
+                    new Coordinate(256, -384),
+                    new Coordinate(320, -384),
+                    new Coordinate(320, -320)
+            },
+            {
+                    new Coordinate(128, -256),
+                    new Coordinate(128, -320),
+                    new Coordinate(128, -384),
+                    new Coordinate(192, -384),
+                    new Coordinate(192, -320),
+                    new Coordinate(192, -256)
+            },
+            {
+                    new Coordinate(256, -384),
+                    new Coordinate(192, -384),
+                    new Coordinate(192, -448),
+                    new Coordinate(192, -512),
+                    new Coordinate(256, -512),
+                    new Coordinate(256, -448)
+            }
+    };
 
-        for (int i = 0; i < coordinates.length; i++) {
-            int x = coordinates[i][0] - prevX;
-            int y = coordinates[i][1] - prevY;
-            points[i] = new GeneralFontTests.Point(x, y);
-            prevX = coordinates[i][0];
-            prevY = coordinates[i][1];
-        }
-
-        return points;
-    }
 }

@@ -17,18 +17,18 @@ public interface KImage {
     }
 
     default KImage drawString(int x, int y, String str) {
-        return drawString(x, y, str, 0.5);
+        return drawString(x, y, str, 32);
     }
 
-    default KImage drawString(int x, int y, String str, double scale) {
-        return drawString(x, y, str, Color.BLACK, FontReaders.getDefaultFontReader(), scale);
+    default KImage drawString(int x, int y, String str, int fontSize) {
+        return drawString(x, y, str, Color.BLACK, FontReaders.getDefaultFontReader(), fontSize);
     }
 
-    default KImage drawString(int x, int y, String str, Color color, double scale) {
-        return drawString(x, y, str, color, FontReaders.getDefaultFontReader(), scale);
+    default KImage drawString(int x, int y, String str, Color color, int fontSize) {
+        return drawString(x, y, str, color, FontReaders.getDefaultFontReader(), fontSize);
     }
 
-    KImage drawString(int x, int y, String str, Color color, KFont font, double scale);
+    KImage drawString(int x, int y, String str, Color color, KFont font, int fontSize);
 
     KImage drawPixel(int x, int y, Color color);
 
@@ -56,8 +56,6 @@ public interface KImage {
      * @return a byte array representing the entire image file
      */
     byte[] encode();
-
-    SimplePng getPng();
 
     /**
      * Adds a new custom chunk to the image data.
@@ -89,4 +87,35 @@ public interface KImage {
     default KImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color) {
         return drawBezierCurve(start, end, curve, color, 300);
     }
+
+    /**
+     * @param x   The anchor point (top left corner)
+     * @param y   The anchor point (top left corner)
+     * @param img the image to draw.
+     */
+    KImage draw(int x, int y, KImage img);
+
+    /**
+     * Resizes the image to the given width and height
+     *
+     * @param width  new width
+     * @param height new height
+     * @return
+     */
+    KImage resize(int width, int height);
+
+    /**
+     * Resizes the image by the given scale with the results being (floored)
+     */
+    KImage resize(double scale);
+
+    int getWidth();
+    int getHeight();
+
+    /**
+     * @param x x coordinate of the target
+     * @param y y coordinate of the target
+     * @return an int[4] with RGBA values
+     */
+    Color getColor(int x, int y);
 }

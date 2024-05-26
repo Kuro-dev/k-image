@@ -23,7 +23,7 @@ public class DrawableImageTests {
         img.drawCircle(400, 400, 25, Color.WHITE);
 
         DrawableImage img2 = DrawableImage.ofBytes(img.encode());
-        assertEquals(img.getPng(), img2.getPng());
+        assertEquals(img.encode(), img2.encode());
     }
 
     @Test
@@ -38,15 +38,21 @@ public class DrawableImageTests {
 
     @Test
     public void drawString() throws IOException {
-        KImage img = new DrawableImage(1500, 800);
+        KImage img = new DrawableImage(200, 100);
         img.fill(Color.WHITE);
         KFont font = KFont.getFont();
-        double scale = 0.1;
-        img.drawString(0, 10, "ABCDEFGHIJ", Color.BLACK, font, scale);
-        img.drawString(0, 210, "KLMNOPQRS", Color.BLACK, font, scale);
-        img.drawString(0, 410, "TUVWXYZ", Color.BLACK, font, scale);
-        img.drawString(0, 610, "!\"$%&/()=", Color.BLACK, font, scale);
-//        img.drawBezierCurve(new Coordinate(0, 800), new Coordinate(1500, 0), new Coordinate(1500, 800), Color.BLACK, 100);
+        img.drawLine(0, 82, img.getWidth(), 82, Color.DARK_GRAY);
+        img.drawString(10, 80, "12AM", Color.BLACK, font, 32);
         Files.write(Path.of("./test.png"), img.encode());
+    }
+
+    @Test
+    public void getColorTest() {
+        KImage img = new DrawableImage(100, 100);
+        img.fill(Color.WHITE);
+        img.drawPixel(50, 50, Color.GREEN);
+        img.drawPixel(50, 51, new Color(30, 50, 60, 70));
+        assertEquals(Color.GREEN, img.getColor(50, 50));
+        assertEquals(new Color(30, 50, 60, 70), img.getColor(50, 51));
     }
 }
