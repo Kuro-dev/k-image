@@ -7,18 +7,15 @@ import org.kurodev.kimage.kimage.img.ChunkHandler;
 import org.kurodev.kimage.kimage.img.SimplePng;
 import org.kurodev.kimage.kimage.img.SimplePngDecoder;
 import org.kurodev.kimage.kimage.img.SimplePngEncoder;
+import org.kurodev.kimage.kimage.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.List;
+import java.util.*;
 
 public class DrawableImage implements KImage {
     private static final Logger logger = LoggerFactory.getLogger(DrawableImage.class);
@@ -67,24 +64,9 @@ public class DrawableImage implements KImage {
 
     @Override
     public KImage drawLine(int x1, int y1, int x2, int y2, Color color) {
-        int dx = Math.abs(x2 - x1);
-        int dy = Math.abs(y2 - y1);
-        int sx = x1 < x2 ? 1 : -1;
-        int sy = y1 < y2 ? 1 : -1;
-        int err = dx - dy;
-
-        while (true) {
-            png.writeColor(x1, y1, color);
-            if (x1 == x2 && y1 == y2) break;
-            int e2 = 2 * err;
-            if (e2 > -dy) {
-                err -= dy;
-                x1 += sx;
-            }
-            if (e2 < dx) {
-                err += dx;
-                y1 += sy;
-            }
+        List<Coordinate> points = Util.calculateLinePoints(x1, y1, x2, y2);
+        for (Coordinate point : points) {
+            png.writeColor(point.x(), point.y(), color);
         }
         return this;
     }
@@ -97,6 +79,15 @@ public class DrawableImage implements KImage {
         drawLine(x, y, x, y + dy, color); //vertical left line
         drawLine(x + dx, y, x + dx, y + dy + 1, color); //vertical right line
         return this;
+    }
+
+    public DrawableImage fillRect(Coordinate corner1, Coordinate corner2, Coordinate corner3, Coordinate corner4, Color color) {
+        int minX = Math.min(Math.min(corner1.x(), corner2.x()), Math.min(corner3.x(), corner4.x()));
+        int minY = Math.min(Math.min(corner1.y(), corner2.y()), Math.min(corner3.y(), corner4.y()));
+        int maxX = Math.max(Math.max(corner1.x(), corner2.x()), Math.max(corner3.x(), corner4.x()));
+        int maxY = Math.max(Math.max(corner1.y(), corner2.y()), Math.max(corner3.y(), corner4.y()));
+
+        return fillRect(minX, minY, maxX - minX, maxY - minY, color);
     }
 
     @Override
@@ -223,7 +214,7 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
+    private DrawableImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
         if (glyph.getNumberOfContours() == 0) {
             // ignore empty glyphs such as spaces etc.
             return this;
@@ -248,26 +239,89 @@ public class DrawableImage implements KImage {
             int lastX = (int) Math.round(x + (contour[contour.length - 1].x() * scale));
             int lastY = (int) Math.round(y + (contour[contour.length - 1].y() * scale));
             drawLine(firstX, firstY, lastX, lastY, color);
+            fillGlyph(x, y, glyph, contour, scale, color);
         }
         return this;
     }
 
+    private void fillGlyph(int x, int y, FontGlyph glyph, Coordinate[] contour, double scale, Color color) {
+        int maxX = (int) (glyph.getxMax() * scale);
+        int maxY = (int) (glyph.getyMax() * scale);
+        int minX = (int) (glyph.getxMin() * scale);
+        int minY = (int) (glyph.getyMin() * scale);
 
+        for (int dy = minY; dy < maxY; dy++) {
+            for (int dx = minX; dx < maxX; dx++) {
+                if (Util.isPointInsideContour(dx, dy, contour, scale)) {
+                    drawPixel(x + dx, y + dy, color);
+                }
+            }
+        }
+    }
+
+
+    @Override
     public DrawableImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps) {
-        double stepSize = 1.0 / steps;
-        Coordinate previous = start;
-        for (int i = 1; i <= steps; i++) {
-            double t = stepSize * i;
-            double x = Math.pow(1 - t, 2) * start.x() + 2 * t * (1 - t) * curve.x() + Math.pow(t, 2) * end.x();
-            double y = Math.pow(1 - t, 2) * start.y() + 2 * t * (1 - t) * curve.y() + Math.pow(t, 2) * end.y();
-            drawLine(previous.x(), previous.y(), (int) x, (int) y, color);
-            previous = new Coordinate((int) x, (int) y); // Update previous point
+        List<Coordinate> points = Util.calculateBezierCurve(start, end, curve, steps);
+        Coordinate previous = points.getFirst();
+        for (Coordinate point : points) {
+            drawLine(previous.x(), previous.y(), point.x(), point.y(), color);
+            previous = point;
         }
         return this;
     }
 
     @Override
-    public KImage draw(int x, int y, KImage img) {
+    public DrawableImage fillBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps) {
+        List<Coordinate> points = Util.calculateBezierCurve(start, end, curve, steps);
+        Coordinate previous = points.getFirst();
+        drawLine(start.x(), start.y(), end.x(), end.y(), color);
+        for (Coordinate point : points) {
+            Util.calculateLinePoints(previous.x(), previous.y(), point.x(), point.y()).forEach(c -> drawPixel(c, color));
+            previous = point;
+        }
+        Coordinate center = Util.calculateCenterPoint(start, end, curve);
+        fillArea(center, color); //further testing needed, but I think the center should always be inside the curve.
+        return this;
+    }
+
+    public DrawableImage fillArea(Coordinate start, Color color) {
+        final Color colorToOverride = getColor(start.x(), start.y());
+        if (colorToOverride == null) return this;
+
+        drawPixel(start, color);
+        Deque<Coordinate> stack = new ArrayDeque<>(checkSameColourNeighbours(start, colorToOverride));
+        while (!stack.isEmpty()) {
+            Coordinate point = stack.pop();
+            drawPixel(point, color);
+            checkSameColourNeighbours(point, colorToOverride).forEach(stack::push);
+        }
+        return this;
+    }
+
+    private List<Coordinate> checkSameColourNeighbours(Coordinate point, Color color) {
+        List<Coordinate> out = new ArrayList<>();
+        Coordinate a = new Coordinate(point.x() + 1, point.y());
+        Coordinate b = new Coordinate(point.x() - 1, point.y());
+        Coordinate c = new Coordinate(point.x(), point.y() + 1);
+        Coordinate d = new Coordinate(point.x(), point.y() - 1);
+        if (color.equals(getColor(a))) {
+            out.add(a);
+        }
+        if (color.equals(getColor(b))) {
+            out.add(b);
+        }
+        if (color.equals(getColor(c))) {
+            out.add(c);
+        }
+        if (color.equals(getColor(d))) {
+            out.add(d);
+        }
+        return out;
+    }
+
+    @Override
+    public DrawableImage draw(int x, int y, KImage img) {
         for (int dx = x; dx < img.getWidth(); dx++) {
             for (int dy = y; dy < img.getHeight(); dy++) {
                 if (!isOOB(dx, dy))
@@ -278,14 +332,14 @@ public class DrawableImage implements KImage {
     }
 
     @Override
-    public KImage resize(int width, int height) {
+    public DrawableImage resize(int width, int height) {
         var out = new DrawableImage(width, height);
         out.draw(0, 0, this);
         return out;
     }
 
     @Override
-    public KImage resize(double scale) {
+    public DrawableImage resize(double scale) {
         var out = new DrawableImage((int) (getWidth() * scale), (int) (getHeight() * scale));
         out.draw(0, 0, this);
         return out;
@@ -304,7 +358,6 @@ public class DrawableImage implements KImage {
     @Override
     public Color getColor(int x, int y) {
         if (isOOB(x, y)) {
-            logger.warn("Target coordinate is out of bounds [{}|{}]", x, y);
             return null;
         }
         final int r = 0, g = 1, b = 2, a = 3;
@@ -312,7 +365,14 @@ public class DrawableImage implements KImage {
         return new Color(col[r], col[g], col[b], col[a]);
     }
 
-    public KImage drawString(int x, int y, String str, Color color, KFont font, int fontSize) {
+    @Override
+    public KImage fillTriangle(Coordinate c1, Coordinate c2, Coordinate c3, Color color) {
+        var points = Util.calculateTrianglePoints(c1, c2, c3);
+        points.forEach(c -> drawPixel(c, color));
+        return this;
+    }
+
+    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, int fontSize) {
         int lowestPPEM = font.getLowestRecommendedPPEM();
         if (fontSize < lowestPPEM) {
             logger.warn("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +

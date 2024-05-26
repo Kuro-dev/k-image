@@ -3,7 +3,6 @@ package org.kurodev.kimage.kimage.draw;
 import org.kurodev.kimage.kimage.font.FontReaders;
 import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
-import org.kurodev.kimage.kimage.img.SimplePng;
 
 import java.awt.*;
 
@@ -32,6 +31,10 @@ public interface KImage {
 
     KImage drawPixel(int x, int y, Color color);
 
+    default KImage drawPixel(Coordinate point, Color color) {
+        return drawPixel(point.x(), point.y(), color);
+    }
+
     KImage drawLine(int x1, int y1, int x2, int y2, Color color);
 
     default KImage drawLine(int x1, int y1, int x2, int y2, Color color, int thickness) {
@@ -40,6 +43,10 @@ public interface KImage {
             drawLine(x1, y1 + i, x2, y2 + i, color);
         }
         return this;
+    }
+
+    default KImage drawLine(Coordinate a, Coordinate b, Color color) {
+        return drawLine(a.x(), a.y(), b.x(), b.y(), color);
     }
 
     KImage drawRect(int x, int y, int dx, int dy, Color color);
@@ -84,8 +91,14 @@ public interface KImage {
      */
     KImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps);
 
+    KImage fillBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps);
+
     default KImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color) {
-        return drawBezierCurve(start, end, curve, color, 300);
+        return drawBezierCurve(start, end, curve, color, 5000);
+    }
+
+    default KImage fillBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color) {
+        return fillBezierCurve(start, end, curve, color, 5000);
     }
 
     /**
@@ -110,6 +123,7 @@ public interface KImage {
     KImage resize(double scale);
 
     int getWidth();
+
     int getHeight();
 
     /**
@@ -118,4 +132,10 @@ public interface KImage {
      * @return an int[4] with RGBA values
      */
     Color getColor(int x, int y);
+
+    default Color getColor(Coordinate point) {
+        return getColor(point.x(), point.y());
+    }
+
+    KImage fillTriangle(Coordinate c1, Coordinate c2, Coordinate c3, Color color);
 }

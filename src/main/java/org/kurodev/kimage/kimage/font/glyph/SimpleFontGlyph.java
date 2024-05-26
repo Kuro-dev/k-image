@@ -3,9 +3,6 @@ package org.kurodev.kimage.kimage.font.glyph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class SimpleFontGlyph implements FontGlyph {
     private static final Logger logger = LoggerFactory.getLogger(SimpleFontGlyph.class);
     /**
@@ -42,10 +39,11 @@ public class SimpleFontGlyph implements FontGlyph {
     public SimpleFontGlyph(char character, int numberOfContours, int xMin, int yMin, int xMax, int yMax, int[] xCoordinates, int[] yCoordinates, byte[] flags, int[] instructions, int[] endPtsOfContours, int advanceWidth) {
         this.character = character;
         this.numberOfContours = numberOfContours;
+        //swapping ymin and ymax because of the inversion happening below the hood.
         this.xMin = xMin;
-        this.yMin = yMin;
+        this.yMin = -yMax;
         this.xMax = xMax;
-        this.yMax = yMax;
+        this.yMax = yMin;
         this.xCoordinates = xCoordinates;
         this.yCoordinates = yCoordinates;
         this.flags = flags;
@@ -54,6 +52,14 @@ public class SimpleFontGlyph implements FontGlyph {
         this.advanceWidth = advanceWidth;
     }
 
+    /**
+     * int maxX = Arrays.stream(contour).map(Coordinate::x).max(Integer::compareTo).get();
+     * int maxY = Arrays.stream(contour).map(Coordinate::y).max(Integer::compareTo).get();
+     * int minX = Arrays.stream(contour).map(Coordinate::x).min(Integer::compareTo).get();
+     * int minY = Arrays.stream(contour).map(Coordinate::y).min(Integer::compareTo).get();
+     *
+     * @return
+     */
     public int getNumberOfContours() {
         return numberOfContours;
     }
