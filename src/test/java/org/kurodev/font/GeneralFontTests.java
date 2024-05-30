@@ -1,4 +1,4 @@
-package org.kurodev.font.headers;
+package org.kurodev.font;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.kurodev.font.headers.Helper.coordinatesForLetterA;
+import static org.kurodev.font.Helper.coordinatesForLetterA;
 
 public class GeneralFontTests {
 
