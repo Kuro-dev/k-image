@@ -39,11 +39,17 @@ public class DrawableImageTests {
 
     @Test
     public void drawString() throws IOException {
-        KImage img = new DrawableImage(200, 100);
+        KImage img = new DrawableImage(1000, 300);
         img.fill(Color.WHITE);
-        KFont font = KFont.getFont();
-        img.drawLine(0, 82, img.getWidth(), 82, Color.DARK_GRAY);
-        img.drawString(10, 80, "12AM", Color.BLACK, font, 32);
+        KFont font = KFont.getFont(Files.newInputStream(Path.of("./testfonts/Catways.ttf")));
+        String str = """
+                The quick brown fox jumps over the lazy dog.
+                This is one singular big string with Different characters-
+                and sizes! ###
+                Maybe this will work, maybe it wont! :D
+                Who knows, I don't!
+                """;
+        img.drawString(10, 50, str, Color.BLACK, font, 50);
         Files.write(Path.of("./test.png"), img.encode());
     }
 

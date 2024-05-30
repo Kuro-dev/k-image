@@ -1,6 +1,7 @@
 package org.kurodev.kimage.kimage.font.enums;
 
 /**
+ * Stores pointers to all values of the required "maxp" table.
  * Documentation: <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6maxp.html">Source</a>
  */
 public enum MaxpTable implements FontTableEntry {

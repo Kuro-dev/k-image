@@ -49,8 +49,28 @@ public interface KImage {
         return drawLine(a.x(), a.y(), b.x(), b.y(), color);
     }
 
+    /**
+     * Draws an outline of a rectangle
+     *
+     * @param x     Anchor point X of the rectangle
+     * @param y     Anchor point Y of the rectangle
+     * @param dx    Width of the rectangle
+     * @param dy    Height of the rectangle
+     * @param color Color of the rectangle
+     * @return This object
+     */
     KImage drawRect(int x, int y, int dx, int dy, Color color);
 
+    /**
+     * Draws a solid rectangle
+     *
+     * @param x     Anchor point X of the rectangle
+     * @param y     Anchor point Y of the rectangle
+     * @param dx    Width of the rectangle
+     * @param dy    Height of the rectangle
+     * @param color Color of the rectangle
+     * @return This object
+     */
     KImage fillRect(int x, int y, int dx, int dy, Color color);
 
     KImage fillCircle(int centerX, int centerY, int radius, Color color);

@@ -22,4 +22,10 @@ public interface FontGlyph {
     int getxMax();
 
     int getyMax();
+
+    int computeXmin();
+    int computeYmin();
+    int computeXmax();
+    int computeYmax();
+
 }

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +30,7 @@ public class FontReader implements KFont {
     private TableEntry[] tableEntries;
 
 
-    public void load(DataInputStream in) throws IOException {
+    public void load(InputStream in) throws IOException {
         data = in.readAllBytes();
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
         // Read the offset table
@@ -184,6 +185,7 @@ public class FontReader implements KFont {
     }
 
     public FontGlyph getGlyph(char character) {
+        long start = System.currentTimeMillis();
         int glyphIndex = getGlyphIndex(character);
         ByteBuffer glyf = getTableDataUnsafe("glyf");
         ByteBuffer loca = getTableDataUnsafe("loca");
@@ -201,7 +203,9 @@ public class FontReader implements KFont {
         }
 
         if (glyphOffset == nextGlyphOffset) {
-            return GlyphFactory.createWhitespace(character, getAdvanceWidth(getAdvanceWidth(glyphIndex))); // This glyph has no outline data.
+            long end = System.currentTimeMillis();
+            logger.info("Loading glyph '{}' (index: {}) took {}ms", character, glyphIndex, end - start);
+            return GlyphFactory.createWhitespace(character, getAdvanceWidth(glyphIndex)); // This glyph has no outline data.
         }
 
         glyf.position(glyphOffset);
@@ -211,7 +215,11 @@ public class FontReader implements KFont {
             throw new IllegalStateException("Composite glyphs are not supported yet.");
         }
 
-        return GlyphFactory.readSimpleGlyph(glyf, numberOfContours, glyphOffset, character, getAdvanceWidth(glyphIndex));
+        var out = GlyphFactory.readSimpleGlyph(glyf, numberOfContours, glyphOffset, character, getAdvanceWidth(glyphIndex));
+
+        long end = System.currentTimeMillis();
+        logger.info("Loading glyph '{}' (index: {}) took {}ms", character, glyphIndex, end - start);
+        return out;
     }
 
     /**
@@ -224,8 +232,7 @@ public class FontReader implements KFont {
         if (glyphIndex < numberOfHMetrics) {
             return hmtx.getShort(glyphIndex * 4) & 0xFFFF;
         } else {
-            int lastAdvanceWidth = hmtx.getShort((numberOfHMetrics - 1) * 4) & 0xFFFF;
-            return lastAdvanceWidth;
+            return hmtx.getShort((numberOfHMetrics - 1) * 4) & 0xFFFF;
         }
     }
 

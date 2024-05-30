@@ -2,10 +2,7 @@ package org.kurodev.kimage.kimage.util;
 
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 
 public class Util {
@@ -33,20 +30,61 @@ public class Util {
         }
     }
 
-    public static List<Coordinate> calculateBezierCurve(Coordinate start, Coordinate end, Coordinate curve, int steps) {
-        List<Coordinate> points = new ArrayList<>();
+    public static Set<Coordinate> calculateBezierCurve(Coordinate start, Coordinate end, Coordinate curve, int steps) {
+        Set<Coordinate> points = new HashSet<>();
         double stepSize = 1.0 / steps;
 
-        for (int i = 0; i <= steps; i++) {
+        Coordinate prevPoint = start;
+        points.add(prevPoint);
+
+        for (int i = 1; i <= steps; i++) {
             double t = stepSize * i;
             double x = Math.pow(1 - t, 2) * start.x() + 2 * t * (1 - t) * curve.x() + Math.pow(t, 2) * end.x();
             double y = Math.pow(1 - t, 2) * start.y() + 2 * t * (1 - t) * curve.y() + Math.pow(t, 2) * end.y();
-            points.add(new Coordinate((int) Math.round(x), (int) Math.round(y)));
+            Coordinate currentPoint = new Coordinate((int) Math.round(x), (int) Math.round(y));
+
+            points.addAll(calculateLinePoints(prevPoint, currentPoint));
+            prevPoint = currentPoint;
         }
+
         return points;
     }
 
-    private static Collection<Coordinate> calculateLinePoints(Coordinate c1, Coordinate c2) {
+    /**
+     * scan from max Y to min Y and find all the points where the different X values intersect with the outline of the boundary.
+     * Fill them in.
+     *
+     * @return An updated set of Coordinates (in a new set object).
+     * @implNote does not mutate the original set.
+     */
+    public static Set<Coordinate> fillBezierCurve(Set<Coordinate> boundaryPoints) {
+        Set<Coordinate> filledPoints = new HashSet<>();
+        int minY = boundaryPoints.stream().mapToInt(Coordinate::y).min().orElseThrow();
+        int maxY = boundaryPoints.stream().mapToInt(Coordinate::y).max().orElseThrow();
+
+        for (int y = minY; y <= maxY; y++) {
+            Set<Integer> intersections = new HashSet<>();
+            for (Coordinate point : boundaryPoints) {
+                if (point.y() == y) {
+                    intersections.add(point.x());
+                }
+            }
+
+            if (intersections.isEmpty()) continue;
+
+            int minX = intersections.stream().mapToInt(Integer::intValue).min().orElseThrow();
+            int maxX = intersections.stream().mapToInt(Integer::intValue).max().orElseThrow();
+
+            for (int x = minX; x <= maxX; x++) {
+                filledPoints.add(new Coordinate(x, y));
+            }
+        }
+
+        return filledPoints;
+    }
+
+    public static Collection<Coordinate> calculateLinePoints(Coordinate c1, Coordinate c2) {
+        if (c1.equals(c2)) return Collections.emptyList();
         return calculateLinePoints(c1.x(), c1.y(), c2.x(), c2.y());
     }
 
@@ -58,9 +96,8 @@ public class Util {
         int sy = y1 < y2 ? 1 : -1;
         int err = dx - dy;
 
-        while (true) {
+        while (x1 != x2 || y1 != y2) {
             points.add(new Coordinate(x1, y1));
-            if (x1 == x2 && y1 == y2) break;
             int e2 = 2 * err;
             if (e2 > -dy) {
                 err -= dy;
@@ -117,7 +154,6 @@ public class Util {
 
         return filledPoints;
     }
-
 
     public static boolean isPointInBezierCurve(Coordinate point, Coordinate start, Coordinate end, Coordinate curve, int steps) {
         // Check if the point is within the bounding box of the Bézier curve
@@ -211,4 +247,5 @@ public class Util {
         double xIntersection = (double) (px - x1) / (x2 - x1) * (y2 - y1) + y1;
         return py < xIntersection;
     }
+
 }

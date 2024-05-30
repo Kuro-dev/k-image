@@ -3,6 +3,13 @@ package org.kurodev.kimage.kimage.font.glyph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.ToIntFunction;
+import java.util.stream.IntStream;
+
 public class SimpleFontGlyph implements FontGlyph {
     private static final Logger logger = LoggerFactory.getLogger(SimpleFontGlyph.class);
     /**
@@ -87,6 +94,32 @@ public class SimpleFontGlyph implements FontGlyph {
 
     public int getyMax() {
         return yMax;
+    }
+
+    private IntStream stream(ToIntFunction<Coordinate> function) {
+        List<Coordinate> list = new ArrayList<>();
+        Arrays.stream(getCoordinates()).forEach(coordinates -> Collections.addAll(list, coordinates));
+        return list.stream().mapToInt(function);
+    }
+
+    @Override
+    public int computeXmin() {
+        return stream(Coordinate::x).min().getAsInt();
+    }
+
+    @Override
+    public int computeYmin() {
+        return stream(Coordinate::y).min().getAsInt();
+    }
+
+    @Override
+    public int computeXmax() {
+        return stream(Coordinate::x).max().getAsInt();
+    }
+
+    @Override
+    public int computeYmax() {
+        return stream(Coordinate::y).max().getAsInt();
     }
 
     public int[] getxCoordinates() {

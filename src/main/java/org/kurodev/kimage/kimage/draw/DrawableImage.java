@@ -1,8 +1,10 @@
 package org.kurodev.kimage.kimage.draw;
 
 import org.kurodev.kimage.kimage.font.KFont;
+import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.GlyphFlag;
 import org.kurodev.kimage.kimage.img.ChunkHandler;
 import org.kurodev.kimage.kimage.img.SimplePng;
 import org.kurodev.kimage.kimage.img.SimplePngDecoder;
@@ -125,7 +127,7 @@ public class DrawableImage implements KImage {
     }
 
     private boolean isOOB(int x, int y) {
-        return x < 0 || y < 0 || x > png.getWidth() || y > png.getHeight();
+        return x < 0 || y < 0 || x >= png.getWidth() || y >= png.getHeight();
     }
 
     @Override
@@ -230,8 +232,22 @@ public class DrawableImage implements KImage {
                 int prevY = (int) Math.round(y + (prev.y() * scale));
                 int nextX = (int) Math.round(x + (point.x() * scale));
                 int nextY = (int) Math.round(y + (point.y() * scale));
-                drawLine(prevX, prevY, nextX, nextY, color);
-                prev = point;
+                if (point.flags().contains(GlyphFlag.ON_CURVE)) {
+                    drawLine(prevX, prevY, nextX, nextY, color);
+                    prev = point;
+                } else {
+                    i++;
+                    Coordinate start = new Coordinate(prevX, prevY);
+                    Coordinate curve = new Coordinate(nextX, nextY);
+                    Coordinate endPoint = contour[i % contour.length];
+                    int endX = (int) Math.round(x + (endPoint.x() * scale));
+                    int endY = (int) Math.round(y + (endPoint.y() * scale));
+                    Coordinate end = new Coordinate(endX, endY);
+                    //point is not on curve, and therefore should not be drawn
+                    drawBezierCurve(start, end, curve, color);
+                    if (i < contour.length)
+                        prev = contour[i];
+                }
             }
             //connect first and last point of the contour
             int firstX = (int) Math.round(x + (contour[0].x() * scale));
@@ -239,9 +255,33 @@ public class DrawableImage implements KImage {
             int lastX = (int) Math.round(x + (contour[contour.length - 1].x() * scale));
             int lastY = (int) Math.round(y + (contour[contour.length - 1].y() * scale));
             drawLine(firstX, firstY, lastX, lastY, color);
-            fillGlyph(x, y, glyph, contour, scale, color);
+            //fillGlyph(x, y, glyph, contour, scale, color);
         }
         return this;
+    }
+
+    private void drawPresumedGlyphBoundingBox(FontGlyph glyph, int x, int y, double scale, Color color) {
+        int maxX = (int) (glyph.getxMax() * scale);
+        int maxY = (int) (glyph.getyMax() * scale);
+        int minX = (int) (glyph.getxMin() * scale);
+        int minY = (int) (glyph.getyMin() * scale);
+        int targetX = minX + x;
+        int targetY = minY + y;
+        int targetDX = Math.abs(maxX - minX);
+        int targetDY = Math.abs(maxY - minY);
+        drawRect(targetX, targetY, targetDX, targetDY, color);
+    }
+
+    private void drawActualGlyphBoundingBox(FontGlyph glyph, int x, int y, double scale, Color color) {
+        int maxX = (int) (glyph.computeXmax() * scale);
+        int maxY = (int) (glyph.computeYmax() * scale);
+        int minX = (int) (glyph.computeXmin() * scale);
+        int minY = (int) (glyph.computeYmin() * scale);
+        int targetX = minX + x;
+        int targetY = minY + y;
+        int targetDX = Math.abs(maxX - minX);
+        int targetDY = Math.abs(maxY - minY);
+        drawRect(targetX, targetY, targetDX, targetDY, color);
     }
 
     private void fillGlyph(int x, int y, FontGlyph glyph, Coordinate[] contour, double scale, Color color) {
@@ -262,32 +302,33 @@ public class DrawableImage implements KImage {
 
     @Override
     public DrawableImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps) {
-        List<Coordinate> points = Util.calculateBezierCurve(start, end, curve, steps);
-        Coordinate previous = points.getFirst();
+        Set<Coordinate> points = Util.calculateBezierCurve(start, end, curve, steps);
         for (Coordinate point : points) {
-            drawLine(previous.x(), previous.y(), point.x(), point.y(), color);
-            previous = point;
+            drawPixel(point, color);
         }
         return this;
     }
 
     @Override
     public DrawableImage fillBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps) {
-        List<Coordinate> points = Util.calculateBezierCurve(start, end, curve, steps);
-        Coordinate previous = points.getFirst();
-        drawLine(start.x(), start.y(), end.x(), end.y(), color);
+        Set<Coordinate> points = Util.calculateBezierCurve(start, end, curve, steps);
+        //draw a line to connect the start and end points.
+        //otherwise the fill function cannot use ray-intersect properly
+        points.addAll(Util.calculateLinePoints(start, end));
+        points = Util.fillBezierCurve(points);
         for (Coordinate point : points) {
-            Util.calculateLinePoints(previous.x(), previous.y(), point.x(), point.y()).forEach(c -> drawPixel(c, color));
-            previous = point;
+            drawPixel(point, color);
         }
-        Coordinate center = Util.calculateCenterPoint(start, end, curve);
-        fillArea(center, color); //further testing needed, but I think the center should always be inside the curve.
         return this;
     }
 
     public DrawableImage fillArea(Coordinate start, Color color) {
         final Color colorToOverride = getColor(start.x(), start.y());
         if (colorToOverride == null) return this;
+        if (colorToOverride.equals(color)) {
+            logger.warn("Cannot override color with the same color");
+            return this;
+        }
 
         drawPixel(start, color);
         Deque<Coordinate> stack = new ArrayDeque<>(checkSameColourNeighbours(start, colorToOverride));
@@ -386,16 +427,29 @@ public class DrawableImage implements KImage {
             logger.warn("Enforcing fontsize: {}px", lowerRecommendation);
             fontSize = lowerRecommendation;
         }
+
+        int maxHeight = font.getTableValue(HeadTable.Y_MAX) - font.getTableValue(HeadTable.Y_MIN);
+        if (maxHeight == 0) {
+            logger.info("Attempted to draw only whitespace characters");
+            return this;
+        }
+        int originalX = x;
         for (int i = 0; i < str.length(); i++) {
-            var glyph = font.getGlyph(str.charAt(i));
-            logger.info("Drawing glyph {} at {}x{}", glyph, x, y);
-            int glyphHeight = glyph.getyMax() - glyph.getyMin();
+            char character = str.charAt(i);
+
             // Calculate the scale factor based on the target height
-            double scale = (double) fontSize / glyphHeight;
+            double scale = (double) fontSize / maxHeight;
+            if (character == '\n') {
+                y += (int) (maxHeight * scale);
+                x = originalX;
+                continue;
+            }
+            var glyph = font.getGlyph(character);
             drawGlyph(x, y, glyph, color, scale);
             x += (int) Math.ceil(glyph.getAdvanceWidth() * scale);
         }
         return this;
     }
+
 
 }

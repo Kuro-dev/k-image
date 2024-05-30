@@ -18,6 +18,11 @@ public record Coordinate(int x, int y, List<GlyphFlag> flags) {
     }
 
     @Override
+    public String toString() {
+        return "[" + x + "|" + y + "]";
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(x, y);
     }

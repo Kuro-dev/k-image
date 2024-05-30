@@ -6,8 +6,11 @@ import org.kurodev.kimage.kimage.font.FontReader;
 import org.kurodev.kimage.kimage.font.FontReaders;
 import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.kurodev.font.headers.Helper.coordinatesForLetterA;
@@ -67,14 +70,14 @@ public class GeneralFontTests {
 
     @Test
     public void testBasicFontData() throws IOException {
-        KFont font =  FontReaders.loadFont(FontReaders.class.getResourceAsStream("/kimage/Pixellettersfull.ttf"));
+        KFont font = FontReaders.loadFont(FontReaders.class.getResourceAsStream("/kimage/Pixellettersfull.ttf"));
         var glyph = font.getGlyph('A');
         var coordinates = glyph.getCoordinates();
         assertEquals(coordinatesForLetterA.length, coordinates.length, "read coordinates differ in size");
         for (int contourIndex = 0; contourIndex < coordinatesForLetterA.length; contourIndex++) {
             Coordinate[] expectedContour = coordinatesForLetterA[contourIndex];
             Coordinate[] actualContour = coordinates[contourIndex];
-            assertEquals(expectedContour.length, actualContour.length, "read contour differs in size in contour "+ contourIndex);
+            assertEquals(expectedContour.length, actualContour.length, "read contour differs in size in contour " + contourIndex);
             for (int coordinate = 0; coordinate < expectedContour.length; coordinate++) {
                 Coordinate expected = expectedContour[coordinate];
                 Coordinate actual = actualContour[coordinate];
@@ -82,6 +85,13 @@ public class GeneralFontTests {
                 assertEquals(expected, actual);
             }
         }
+    }
+
+    @Test
+    public void advanceWidthVerification() throws IOException {
+        KFont font = KFont.getFont(Files.newInputStream(Path.of("./testfonts/Catways.ttf")));
+        FontGlyph glyph = font.getGlyph(' ');
+        assertEquals(250, glyph.getAdvanceWidth(), "Advancewidth should be 250");
     }
 
     public record Point(int x, int y) {
