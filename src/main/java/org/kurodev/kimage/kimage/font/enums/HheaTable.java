@@ -1,6 +1,7 @@
 package org.kurodev.kimage.kimage.font.enums;
 
 /**
+ * Stores pointers to all values of the required "hhea" table.
  * Documentation <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6hhea.html">Source</a>
  */
 public enum HheaTable implements FontTableEntry {

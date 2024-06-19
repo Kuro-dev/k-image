@@ -1,16 +1,20 @@
 package org.kurodev.kimage.kimage.draw;
 
 import org.kurodev.kimage.kimage.font.KFont;
+import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.GlyphFlag;
 import org.kurodev.kimage.kimage.img.ChunkHandler;
 import org.kurodev.kimage.kimage.img.SimplePng;
 import org.kurodev.kimage.kimage.img.SimplePngDecoder;
 import org.kurodev.kimage.kimage.img.SimplePngEncoder;
 import org.kurodev.kimage.kimage.util.ContourHorizontalIntersects;
+import org.kurodev.kimage.kimage.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.text.Segment;
 import java.awt.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -64,23 +68,9 @@ public class DrawableImage implements KImage {
 
     @Override
     public KImage drawLine(int x1, int y1, int x2, int y2, Color color) {
-        int dx = Math.abs(x2 - x1);
-        int dy = Math.abs(y2 - y1);
-        int sx = x1 < x2 ? 1 : -1;
-        int sy = y1 < y2 ? 1 : -1;
-        int err = dx - dy;
-
-        while (x1 != x2 || y1 != y2) {
-            png.writeColor(x1, y1, color); // Draw pixel at (x1, y1)
-            int e2 = 2 * err;
-            if (e2 > -dy) {
-                err -= dy;
-                x1 += sx;
-            }
-            if (e2 < dx) {
-                err += dx;
-                y1 += sy;
-            }
+        List<Coordinate> points = Util.calculateLinePoints(x1, y1, x2, y2);
+        for (Coordinate point : points) {
+            png.writeColor(point.x(), point.y(), color);
         }
         return this;
     }
@@ -93,6 +83,15 @@ public class DrawableImage implements KImage {
         drawLine(x, y, x, y + dy, color); //vertical left line
         drawLine(x + dx, y, x + dx, y + dy + 1, color); //vertical right line
         return this;
+    }
+
+    public DrawableImage fillRect(Coordinate corner1, Coordinate corner2, Coordinate corner3, Coordinate corner4, Color color) {
+        int minX = Math.min(Math.min(corner1.x(), corner2.x()), Math.min(corner3.x(), corner4.x()));
+        int minY = Math.min(Math.min(corner1.y(), corner2.y()), Math.min(corner3.y(), corner4.y()));
+        int maxX = Math.max(Math.max(corner1.x(), corner2.x()), Math.max(corner3.x(), corner4.x()));
+        int maxY = Math.max(Math.max(corner1.y(), corner2.y()), Math.max(corner3.y(), corner4.y()));
+
+        return fillRect(minX, minY, maxX - minX, maxY - minY, color);
     }
 
     @Override
@@ -130,7 +129,7 @@ public class DrawableImage implements KImage {
     }
 
     private boolean isOOB(int x, int y) {
-        return x < 0 || y < 0 || x > png.getWidth() || y > png.getHeight();
+        return x < 0 || y < 0 || x >= png.getWidth() || y >= png.getHeight();
     }
 
     @Override
@@ -176,16 +175,10 @@ public class DrawableImage implements KImage {
     private void decode(byte[] png) throws IOException {
         decoder.decodePng(png);
         var img = decoder.getImage();
-        this.png.override(img.getPng());
+        this.png.override(img.png);
         this.customChunks.clear();
         this.customChunks.putAll(img.customChunks);
     }
-
-    @Override
-    public SimplePng getPng() {
-        return png;
-    }
-
 
     /**
      * Adds a new custom chunk to the image data.
@@ -215,7 +208,7 @@ public class DrawableImage implements KImage {
      */
     @Override
     public DrawableImage fill(Color color) {
-        fillRect(0, 0, getPng().getWidth(), getPng().getHeight(), color);
+        fillRect(0, 0, getWidth(), getHeight(), color);
         return this;
     }
 
@@ -231,11 +224,15 @@ public class DrawableImage implements KImage {
     }
 
     private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
+=======
+    private DrawableImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
+>>>>>>> master
         if (glyph.getNumberOfContours() == 0) {
-            // ignore empty glyphs such as .notdef and spaces etc.
+            // ignore empty glyphs such as spaces etc.
             return this;
         }
 
+<<<<<<< HEAD
         int[] endPts = glyph.getEndPtsOfContours();
         int startPt = 0;
         int currentX = x;
@@ -265,13 +262,49 @@ public class DrawableImage implements KImage {
             drawLine(currentX, currentY, addmu(startPointX, glyph.getX(startPt), scale), addmu(startPointY, glyph.getY(startPt), -scale), color);
 
             startPt = endPt;
+=======
+        Coordinate[][] contours = glyph.getCoordinates();
+        Coordinate prev = null;
+        for (Coordinate[] contour : contours) {
+            prev = contour[0];
+            for (int i = 1; i < contour.length; i++) {
+                Coordinate point = contour[i];
+                int prevX = (int) Math.round(x + (prev.x() * scale));
+                int prevY = (int) Math.round(y + (prev.y() * scale));
+                int nextX = (int) Math.round(x + (point.x() * scale));
+                int nextY = (int) Math.round(y + (point.y() * scale));
+                if (point.flags().contains(GlyphFlag.ON_CURVE)) {
+                    drawLine(prevX, prevY, nextX, nextY, color);
+                    prev = point;
+                } else {
+                    i++;
+                    Coordinate start = new Coordinate(prevX, prevY);
+                    Coordinate curve = new Coordinate(nextX, nextY);
+                    Coordinate endPoint = contour[i % contour.length];
+                    int endX = (int) Math.round(x + (endPoint.x() * scale));
+                    int endY = (int) Math.round(y + (endPoint.y() * scale));
+                    Coordinate end = new Coordinate(endX, endY);
+                    //point is not on curve, and therefore should not be drawn
+                    drawBezierCurve(start, end, curve, color);
+                    if (i < contour.length)
+                        prev = contour[i];
+                }
+            }
+            //connect first and last point of the contour
+            int firstX = (int) Math.round(x + (contour[0].x() * scale));
+            int firstY = (int) Math.round(y + (contour[0].y() * scale));
+            int lastX = (int) Math.round(x + (contour[contour.length - 1].x() * scale));
+            int lastY = (int) Math.round(y + (contour[contour.length - 1].y() * scale));
+            drawLine(firstX, firstY, lastX, lastY, color);
+            //fillGlyph(x, y, glyph, contour, scale, color);
+>>>>>>> master
         }
-
         return this;
     }
 */
     /*
 
+<<<<<<< HEAD
      */
 
 
@@ -290,6 +323,8 @@ public class DrawableImage implements KImage {
         double currentX = x;
         double currentY = addmu(y, glyph.getyMax(), scale);
 
+        var segments = new ArrayList<ContourHorizontalIntersects.Segment>();
+        
         for (int contour = 0; contour < endPts.length; contour++) {
             int endPt = endPts[contour] + 1;
             logger.info("Drawing contour: {}", contour);
@@ -310,49 +345,186 @@ public class DrawableImage implements KImage {
                 currentY = nextY;
             }
 
-            var it = ContourHorizontalIntersects.horizontalIntersects(coords);
-            while(it.hasNext()) {
-                var intersects = it.next();
-                var intersectY = intersects.y();
-                var intersectXs = intersects.xs();
-
-                for(int i = 1; i < intersectXs.length; i++) {
-                    drawLine(
-                            (int)Math.round(intersectXs[i-1]),
-                            (int)intersectY,
-                            (int)Math.round(intersectXs[i]),
-                            (int)intersectY,
-                            color);
+            {
+                segments.add(new ContourHorizontalIntersects.Segment(coords.getLast(), coords.getFirst()));
+                for (int i = 1; i < coords.size(); i++) {
+                    var segment = new ContourHorizontalIntersects.Segment(coords.get(i - 1), coords.get(i));
+                    segments.add(segment);
                 }
             }
             startPt = endPt;
         }
 
+        var it = ContourHorizontalIntersects.horizontalIntersects(segments);
+        while(it.hasNext()) {
+            var intersects = it.next();
+            var intersectY = intersects.y();
+            var intersectXs = intersects.xs();
+
+            for(int i = 1; i < intersectXs.length; i++) {
+                drawLine(
+                        (int)Math.round(intersectXs[i-1]),
+                        (int)intersectY,
+                        (int)Math.round(intersectXs[i]),
+                        (int)intersectY,
+                        color);
+            }
+        }
+
         return this;
     }
 
 
+    @Override
     public DrawableImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps) {
-        double stepSize = 1.0 / steps;
-        Coordinate previous = start;
-        for (int i = 1; i <= steps; i++) {
-            double t = stepSize * i;
-            double x = Math.pow(1 - t, 2) * start.x() + 2 * t * (1 - t) * curve.x() + Math.pow(t, 2) * end.x();
-            double y = Math.pow(1 - t, 2) * start.y() + 2 * t * (1 - t) * curve.y() + Math.pow(t, 2) * end.y();
-            drawLine(previous.x(), previous.y(), (int) x, (int) y, color);
-            previous = new Coordinate((int) x, (int) y); // Update previous point
+        Set<Coordinate> points = Util.calculateBezierCurve(start, end, curve, steps);
+        for (Coordinate point : points) {
+            drawPixel(point, color);
         }
         return this;
     }
 
-    public KImage drawString(int x, int y, String str, Color color, KFont font, double scale) {
-        for (int i = 0; i < str.length(); i++) {
-            var glyph = font.getGlyph(str.charAt(i));
-            logger.info("Drawing glyph {} at {}x{}", glyph, x, y);
-            drawGlyph(x, y, glyph, color, scale);
-            x += (int) (glyph.getAdvanceWidth() * scale);
+    @Override
+    public DrawableImage fillBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps) {
+        Set<Coordinate> points = Util.calculateBezierCurve(start, end, curve, steps);
+        //draw a line to connect the start and end points.
+        //otherwise the fill function cannot use ray-intersect properly
+        points.addAll(Util.calculateLinePoints(start, end));
+        points = Util.fillBezierCurve(points);
+        for (Coordinate point : points) {
+            drawPixel(point, color);
         }
         return this;
     }
+
+    public DrawableImage fillArea(Coordinate start, Color color) {
+        final Color colorToOverride = getColor(start.x(), start.y());
+        if (colorToOverride == null) return this;
+        if (colorToOverride.equals(color)) {
+            logger.warn("Cannot override color with the same color");
+            return this;
+        }
+
+        drawPixel(start, color);
+        Deque<Coordinate> stack = new ArrayDeque<>(checkSameColourNeighbours(start, colorToOverride));
+        while (!stack.isEmpty()) {
+            Coordinate point = stack.pop();
+            drawPixel(point, color);
+            checkSameColourNeighbours(point, colorToOverride).forEach(stack::push);
+        }
+        return this;
+    }
+
+    private List<Coordinate> checkSameColourNeighbours(Coordinate point, Color color) {
+        List<Coordinate> out = new ArrayList<>();
+        Coordinate a = new Coordinate(point.x() + 1, point.y());
+        Coordinate b = new Coordinate(point.x() - 1, point.y());
+        Coordinate c = new Coordinate(point.x(), point.y() + 1);
+        Coordinate d = new Coordinate(point.x(), point.y() - 1);
+        if (color.equals(getColor(a))) {
+            out.add(a);
+        }
+        if (color.equals(getColor(b))) {
+            out.add(b);
+        }
+        if (color.equals(getColor(c))) {
+            out.add(c);
+        }
+        if (color.equals(getColor(d))) {
+            out.add(d);
+        }
+        return out;
+    }
+
+    @Override
+    public DrawableImage draw(int x, int y, KImage img) {
+        for (int dx = x; dx < img.getWidth(); dx++) {
+            for (int dy = y; dy < img.getHeight(); dy++) {
+                if (!isOOB(dx, dy))
+                    drawPixel(dx, dy, img.getColor(dx, dy));
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public DrawableImage resize(int width, int height) {
+        var out = new DrawableImage(width, height);
+        out.draw(0, 0, this);
+        return out;
+    }
+
+    @Override
+    public DrawableImage resize(double scale) {
+        var out = new DrawableImage((int) (getWidth() * scale), (int) (getHeight() * scale));
+        out.draw(0, 0, this);
+        return out;
+    }
+
+    @Override
+    public int getWidth() {
+        return png.getWidth();
+    }
+
+    @Override
+    public int getHeight() {
+        return png.getHeight();
+    }
+
+    @Override
+    public Color getColor(int x, int y) {
+        if (isOOB(x, y)) {
+            return null;
+        }
+        final int r = 0, g = 1, b = 2, a = 3;
+        var col = png.readColor(x, y);
+        return new Color(col[r], col[g], col[b], col[a]);
+    }
+
+    @Override
+    public KImage fillTriangle(Coordinate c1, Coordinate c2, Coordinate c3, Color color) {
+        var points = Util.calculateTrianglePoints(c1, c2, c3);
+        points.forEach(c -> drawPixel(c, color));
+        return this;
+    }
+
+    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, int fontSize) {
+        int lowestPPEM = font.getLowestRecommendedPPEM();
+        if (fontSize < lowestPPEM) {
+            logger.warn("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +
+                    " This may result in poor rendering quality.", fontSize, lowestPPEM);
+        }
+        if (fontSize % lowestPPEM != 0) {
+            int lowerRecommendation = ((int) Math.floor(((double) fontSize / lowestPPEM)) * lowestPPEM);
+            int higherRecommendation = ((int) Math.ceil(((double) fontSize / lowestPPEM)) * lowestPPEM);
+            logger.warn("fontsize is not a multiple of the lowest PPEM, and might look wrong. " +
+                    "Recommended alternative sizes to {}: {} or {}", fontSize, lowerRecommendation, higherRecommendation);
+            logger.warn("Enforcing fontsize: {}px", lowerRecommendation);
+            fontSize = lowerRecommendation;
+        }
+
+        int maxHeight = font.getTableValue(HeadTable.Y_MAX) - font.getTableValue(HeadTable.Y_MIN);
+        if (maxHeight == 0) {
+            logger.info("Attempted to draw only whitespace characters");
+            return this;
+        }
+        int originalX = x;
+        for (int i = 0; i < str.length(); i++) {
+            char character = str.charAt(i);
+
+            // Calculate the scale factor based on the target height
+            double scale = (double) fontSize / maxHeight;
+            if (character == '\n') {
+                y += (int) (maxHeight * scale);
+                x = originalX;
+                continue;
+            }
+            var glyph = font.getGlyph(character);
+            drawGlyph(x, y, glyph, color, scale);
+            x += (int) Math.ceil(glyph.getAdvanceWidth() * scale);
+        }
+        return this;
+    }
+
 
 }

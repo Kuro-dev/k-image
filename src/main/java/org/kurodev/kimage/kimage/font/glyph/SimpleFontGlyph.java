@@ -4,7 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.ToIntFunction;
+import java.util.stream.IntStream;
 
 public class SimpleFontGlyph implements FontGlyph {
     private static final Logger logger = LoggerFactory.getLogger(SimpleFontGlyph.class);
@@ -42,10 +46,11 @@ public class SimpleFontGlyph implements FontGlyph {
     public SimpleFontGlyph(char character, int numberOfContours, int xMin, int yMin, int xMax, int yMax, int[] xCoordinates, int[] yCoordinates, byte[] flags, int[] instructions, int[] endPtsOfContours, int advanceWidth) {
         this.character = character;
         this.numberOfContours = numberOfContours;
+        //swapping ymin and ymax because of the inversion happening below the hood.
         this.xMin = xMin;
-        this.yMin = yMin;
+        this.yMin = -yMax;
         this.xMax = xMax;
-        this.yMax = yMax;
+        this.yMax = yMin;
         this.xCoordinates = xCoordinates;
         this.yCoordinates = yCoordinates;
         this.flags = flags;
@@ -54,6 +59,14 @@ public class SimpleFontGlyph implements FontGlyph {
         this.advanceWidth = advanceWidth;
     }
 
+    /**
+     * int maxX = Arrays.stream(contour).map(Coordinate::x).max(Integer::compareTo).get();
+     * int maxY = Arrays.stream(contour).map(Coordinate::y).max(Integer::compareTo).get();
+     * int minX = Arrays.stream(contour).map(Coordinate::x).min(Integer::compareTo).get();
+     * int minY = Arrays.stream(contour).map(Coordinate::y).min(Integer::compareTo).get();
+     *
+     * @return
+     */
     public int getNumberOfContours() {
         return numberOfContours;
     }
@@ -81,6 +94,32 @@ public class SimpleFontGlyph implements FontGlyph {
 
     public int getyMax() {
         return yMax;
+    }
+
+    private IntStream stream(ToIntFunction<Coordinate> function) {
+        List<Coordinate> list = new ArrayList<>();
+        Arrays.stream(getCoordinates()).forEach(coordinates -> Collections.addAll(list, coordinates));
+        return list.stream().mapToInt(function);
+    }
+
+    @Override
+    public int computeXmin() {
+        return stream(Coordinate::x).min().getAsInt();
+    }
+
+    @Override
+    public int computeYmin() {
+        return stream(Coordinate::y).min().getAsInt();
+    }
+
+    @Override
+    public int computeXmax() {
+        return stream(Coordinate::x).max().getAsInt();
+    }
+
+    @Override
+    public int computeYmax() {
+        return stream(Coordinate::y).max().getAsInt();
     }
 
     public int[] getxCoordinates() {
@@ -124,12 +163,32 @@ public class SimpleFontGlyph implements FontGlyph {
     }
 
     @Override
-    public List<Coordinate> getCoordinates() {
-        List<Coordinate> coordinates = new ArrayList<>();
-        for (int i = 0; i < xCoordinates.length; i++) {
-            List<GlyphFlag> glyphFlags = GlyphFlag.identify(flags[i]);
-            coordinates.add(new Coordinate(xCoordinates[i], yCoordinates[i], glyphFlags));
+    public Coordinate[][] getCoordinates() {
+        int currentX = 0;
+        int currentY = 0;
+
+        Coordinate[][] coordinates = new Coordinate[numberOfContours][];
+
+        int pointIndex = 0;
+
+        for (int contourIndex = 0; contourIndex < numberOfContours; contourIndex++) {
+            int contourSize = (contourIndex == 0) ? endPtsOfContours[contourIndex] + 1
+                    : endPtsOfContours[contourIndex] - endPtsOfContours[contourIndex - 1];
+
+            Coordinate[] contour = new Coordinate[contourSize];
+
+            for (int i = 0; i < contourSize; i++) {
+                currentX += xCoordinates[pointIndex];
+                currentY += yCoordinates[pointIndex] * -1; //inverting Y to make the glyph draw upwards instead of downwards.
+
+                contour[i] = new Coordinate(currentX, currentY);
+
+                pointIndex++;
+            }
+
+            coordinates[contourIndex] = contour;
         }
+
         return coordinates;
     }
 }

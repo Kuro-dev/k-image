@@ -1,12 +1,13 @@
 package org.kurodev.kimage.kimage.font.glyph;
 
-import java.util.List;
-
 public interface FontGlyph {
 
     char getCharacter();
 
-    List<Coordinate> getCoordinates();
+    /**
+     * @return a 2D array representing the contours and the different (absolute) points in them
+     */
+    Coordinate[][] getCoordinates();
 
     int getNumberOfContours();
 
@@ -25,4 +26,10 @@ public interface FontGlyph {
     int getxMax();
 
     int getyMax();
+
+    int computeXmin();
+    int computeYmin();
+    int computeXmax();
+    int computeYmax();
+
 }

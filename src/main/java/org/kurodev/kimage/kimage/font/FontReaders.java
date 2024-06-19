@@ -1,6 +1,5 @@
 package org.kurodev.kimage.kimage.font;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -28,7 +27,7 @@ public class FontReaders {
     public static KFont loadFont(InputStream in) throws IOException {
         Objects.requireNonNull(in);
         FontReader reader = new FontReader();
-        reader.load(new DataInputStream(in));
+        reader.load(in);
         return reader;
     }
 }

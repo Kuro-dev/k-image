@@ -5,6 +5,7 @@ import org.kurodev.kimage.kimage.draw.DrawableImage;
 import org.kurodev.kimage.kimage.draw.KImage;
 import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.util.ContourHorizontalIntersects;
+import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 
 import java.awt.*;
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class DrawableImageTests {
         img.drawCircle(400, 400, 25, Color.WHITE);
 
         DrawableImage img2 = DrawableImage.ofBytes(img.encode());
-        assertEquals(img.getPng(), img2.getPng());
+        assertArrayEquals(img.encode(), img2.encode());
     }
 
     @Test
@@ -46,25 +47,17 @@ public class DrawableImageTests {
 
     @Test
     public void drawString() throws IOException {
-        KImage img = new DrawableImage(1500, 800);
+        KImage img = new DrawableImage(1000, 300);
         img.fill(Color.WHITE);
-        KFont font = KFont.getFont();
-        double scale = 0.1;
-        img.drawString(0, 10, "ABCDEFGHIJ", Color.BLACK, font, scale);
-        img.drawString(0, 210, "KLMNOPQRS", Color.BLACK, font, scale);
-        img.drawString(0, 410, "TUVWXYZ", Color.BLACK, font, scale);
-        img.drawString(0, 610, "!\"$%&/()=", Color.BLACK, font, scale);
-//        img.drawBezierCurve(new Coordinate(0, 800), new Coordinate(1500, 0), new Coordinate(1500, 800), Color.BLACK, 100);
-        Files.write(Path.of("./test.png"), img.encode());
-    }
-
-    @Test
-    public void test() throws IOException {
-        KImage img = new DrawableImage(1500, 800);
-        img.fill(Color.WHITE);
-        KFont font = KFont.getFont();
-        double scale = 0.1;
-        img.drawString(0, 10, "A", Color.BLACK, font, scale);
+        KFont font = KFont.getFont(Files.newInputStream(Path.of("./testfonts/Catways.ttf")));
+        String str = """
+                The quick brown fox jumps over the lazy dog.
+                This is one singular big string with Different characters-
+                and sizes! ###
+                Maybe this will work, maybe it wont! :D
+                Who knows, I don't!
+                """;
+        img.drawString(10, 50, str, Color.BLACK, font, 50);
         Files.write(Path.of("./test.png"), img.encode());
     }
 
@@ -72,20 +65,63 @@ public class DrawableImageTests {
     @Test
     public void contourTest() {
 
-        var coords = List.of(
-                new ContourHorizontalIntersects.Coord(2.0, 0.0),
-                new ContourHorizontalIntersects.Coord(0.0, 6.0),
-                new ContourHorizontalIntersects.Coord(8.0, 6.0),
-                new ContourHorizontalIntersects.Coord(8.0, 0.0),
-                new ContourHorizontalIntersects.Coord(4.0, 2.0),
-                new ContourHorizontalIntersects.Coord(2.0, 4.0)
+        var segments = List.of(
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(2.0, 0.0),
+                        new ContourHorizontalIntersects.Coord(0.0, 6.0)
+                ),
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(0.0, 6.0),
+                        new ContourHorizontalIntersects.Coord(8.0, 6.0)
+                ),
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(8.0, 6.0),
+                        new ContourHorizontalIntersects.Coord(8.0, 0.0)
+                ),
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(8.0, 0.0),
+                        new ContourHorizontalIntersects.Coord(4.0, 2.0)
+                ),
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(4.0, 2.0),
+                        new ContourHorizontalIntersects.Coord(2.0, 4.0)
+                ),
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(2.0, 4.0),
+                        new ContourHorizontalIntersects.Coord(2.0, 0.0)
+                )
         );
 
-        var it = ContourHorizontalIntersects.horizontalIntersects(coords);
+        var it = ContourHorizontalIntersects.horizontalIntersects(segments);
 
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             var intersect = it.next();
             System.out.printf("Intersecting (%s, %s)\n", intersect.y(), Arrays.toString(intersect.xs()));
         }
+    }
+
+    public void drawTest() throws IOException {
+        KImage img = new DrawableImage(200, 100);
+        img.fill(Color.WHITE);
+        Coordinate start = new Coordinate(120, 30);
+        Coordinate end = new Coordinate(120, 90);
+        Coordinate curve = new Coordinate(190, 60);
+        img.fillBezierCurve(start, end, curve, Color.BLACK);
+
+        start = new Coordinate(60, 20);
+        end = new Coordinate(110, 90);
+        curve = new Coordinate(30, 45);
+        img.fillBezierCurve(start, end, curve, Color.BLUE);
+        Files.write(Path.of("./test.png"), img.encode());
+    }
+
+    @Test
+    public void getColorTest() {
+        KImage img = new DrawableImage(100, 100);
+        img.fill(Color.WHITE);
+        img.drawPixel(50, 50, Color.GREEN);
+        img.drawPixel(50, 51, new Color(30, 50, 60, 70));
+        assertEquals(Color.GREEN, img.getColor(50, 50));
+        assertEquals(new Color(30, 50, 60, 70), img.getColor(50, 51));
     }
 }

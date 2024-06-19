@@ -2,44 +2,48 @@ package org.kurodev.kimage.kimage.util;
 
 import java.util.*;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class ContourHorizontalIntersects {
+    record Slice(double lowY, double highY) {}
+    public record Segment(Coord a, Coord b) {
+        public Segment(Coord a, Coord b) {
+            if (a.y < b.y) {
+                this.a = a;
+                this.b = b;
+            } else {
+                this.a = b;
+                this.b = a;
+            }
+        }
+
+        boolean crosses(Slice slice) {
+            return a.y < slice.highY && slice.lowY < b.y;
+        }
+
+        double xIntersect(double y) {
+            if (a.y == b.y) {
+                return a.x;
+            } else {
+                return (y - a.y) * (b.x - a.x) / (b.y - a.y) + a.x;
+            }
+        }
+    }
     public record Coord(double x, double y) {}
 
     public record HorizontalIntersects(double y, double[] xs) {}
 
-    public static Iterator<HorizontalIntersects> horizontalIntersects(List<Coord> coords) {
+    public static Iterator<HorizontalIntersects> horizontalIntersects(List<Segment> segments) {
         // Find vertical slices, that is: group the coords 2 by 2
-        record Slice(double lowY, double highY) {}
 
         // For each slice, find the relevant segment crossing the slice
-        record Segment(Coord a, Coord b) {
-            Segment(Coord a, Coord b) {
-                if(a.y < b.y) {
-                    this.a = a;
-                    this.b = b;
-                } else {
-                    this.a = b;
-                    this.b = a;
-                }
-            }
-            boolean crosses(Slice slice) {
-                return a.y < slice.highY && slice.lowY < b.y;
-            }
-
-            double xIntersect(double y) {
-                if(a.y == b.y) {
-                    return a.x;
-                } else {
-                    return (y - a.y) * (b.x - a.x) / (b.y - a.y) + a.x;
-                }
-            }
-        }
 
         final Iterator<Slice> slices;
         {
-            var sortedCoords = new ArrayList<>(coords);
-            sortedCoords.sort(Comparator.comparing(Coord::y).thenComparing(Coord::x));
+            var sortedCoords = Stream.concat(
+                    segments.stream().map(Segment::a),
+                    segments.stream().map(Segment::b)
+            ).sorted(Comparator.comparing(Coord::y).thenComparing(Coord::x)).toList();
             slices = IntStream.range(1, sortedCoords.size()).mapToObj(
                     i -> new Slice(sortedCoords.get(i - 1).y, sortedCoords.get(i).y)
             ).distinct().iterator();
@@ -69,8 +73,11 @@ public class ContourHorizontalIntersects {
 
                 if(cursor == -1) {
                     var slice = slices.next();
-                    crossingSegments = new ArrayList<>();
+                    crossingSegments = segments.stream()
+                            .filter(segment -> segment.crosses(slice))
+                            .toList();
                     {
+                        /*
                         { // first segment goes from end to 0
                             var segment = new Segment(coords.getLast(), coords.getFirst());
                             if (segment.crosses(slice)) {
@@ -83,6 +90,8 @@ public class ContourHorizontalIntersects {
                                 crossingSegments.add(segment);
                             }
                         }
+
+                         */
                     }
 
                     yMax = (int) slice.highY;
@@ -99,7 +108,7 @@ public class ContourHorizontalIntersects {
                         xs[i] = segment.xIntersect(y);
                     }
                     Arrays.sort(xs);
-                    assert xs.length % 2 == 0;
+                    //assert xs.length % 2 == 0;
                     return new HorizontalIntersects(y, xs);
                 } finally {
                     cursor++;
