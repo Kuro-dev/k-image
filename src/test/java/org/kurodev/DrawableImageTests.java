@@ -4,12 +4,20 @@ import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.draw.DrawableImage;
 import org.kurodev.kimage.kimage.draw.KImage;
 import org.kurodev.kimage.kimage.font.KFont;
+import org.kurodev.kimage.kimage.util.ContourHorizontalIntersects;
 
 import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -48,5 +56,36 @@ public class DrawableImageTests {
         img.drawString(0, 610, "!\"$%&/()=", Color.BLACK, font, scale);
 //        img.drawBezierCurve(new Coordinate(0, 800), new Coordinate(1500, 0), new Coordinate(1500, 800), Color.BLACK, 100);
         Files.write(Path.of("./test.png"), img.encode());
+    }
+
+    @Test
+    public void test() throws IOException {
+        KImage img = new DrawableImage(1500, 800);
+        img.fill(Color.WHITE);
+        KFont font = KFont.getFont();
+        double scale = 0.1;
+        img.drawString(0, 10, "A", Color.BLACK, font, scale);
+        Files.write(Path.of("./test.png"), img.encode());
+    }
+
+
+    @Test
+    public void contourTest() {
+
+        var coords = List.of(
+                new ContourHorizontalIntersects.Coord(2.0, 0.0),
+                new ContourHorizontalIntersects.Coord(0.0, 6.0),
+                new ContourHorizontalIntersects.Coord(8.0, 6.0),
+                new ContourHorizontalIntersects.Coord(8.0, 0.0),
+                new ContourHorizontalIntersects.Coord(4.0, 2.0),
+                new ContourHorizontalIntersects.Coord(2.0, 4.0)
+        );
+
+        var it = ContourHorizontalIntersects.horizontalIntersects(coords);
+
+        while(it.hasNext()) {
+            var intersect = it.next();
+            System.out.printf("Intersecting (%s, %s)\n", intersect.y(), Arrays.toString(intersect.xs()));
+        }
     }
 }

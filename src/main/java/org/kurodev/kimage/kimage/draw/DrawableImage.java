@@ -7,6 +7,7 @@ import org.kurodev.kimage.kimage.img.ChunkHandler;
 import org.kurodev.kimage.kimage.img.SimplePng;
 import org.kurodev.kimage.kimage.img.SimplePngDecoder;
 import org.kurodev.kimage.kimage.img.SimplePngEncoder;
+import org.kurodev.kimage.kimage.util.ContourHorizontalIntersects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -224,52 +225,111 @@ public class DrawableImage implements KImage {
         return this;
     }
 
+    /*
+    private static int addmu(int a, int b, double c) {
+        return a + (int)(b*c);
+    }
+
     private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
         if (glyph.getNumberOfContours() == 0) {
             // ignore empty glyphs such as .notdef and spaces etc.
             return this;
         }
 
-        List<Coordinate> coordinates = glyph.getCoordinates();
         int[] endPts = glyph.getEndPtsOfContours();
         int startPt = 0;
         int currentX = x;
-        int currentY = (int) (y + (glyph.getyMax() * scale));
+        int currentY = addmu(y, glyph.getyMax(), scale);
 
-        for (int contour = 0; contour < glyph.getNumberOfContours(); contour++) {
-            int endPt = endPts[contour];
+        for (int contour = 0; contour < endPts.length; contour++) {
+            int endPt = endPts[contour] + 1;
             logger.info("Drawing contour: {}", contour);
-            Coordinate firstPointOfContour = null;
             // Store starting point of the contour
             int startPointX = currentX;
             int startPointY = currentY;
 
-            for (int pt = startPt; pt <= endPt; pt++) {
-                Coordinate offset = coordinates.get(pt);
-                if (firstPointOfContour == null) {
-                    firstPointOfContour = offset;
-                }
-                int nextX = currentX + (int) (offset.x() * scale);
-                int nextY = currentY + (int) (offset.y() * -scale);
+            currentX = addmu(currentX, glyph.getX(startPt), scale);
+            currentY = addmu(currentY, glyph.getY(startPt), -scale);
 
-                if (pt > startPt) {
-                    drawLine(currentX, currentY, nextX, nextY, color);
-                }
+            for(int i = startPt + 1; i < endPt; i++) {
+                int nextX = addmu(currentX, glyph.getX(i), scale);
+                int nextY = addmu(currentY, glyph.getY(i), -scale);
+
+                drawLine(currentX, currentY, nextX, nextY, color);
 
                 currentX = nextX;
                 currentY = nextY;
             }
 
-            assert firstPointOfContour != null;
             // Draw closing line from last point to the first point in the contour
-            drawLine(currentX, currentY, startPointX + (int) (firstPointOfContour.x() * scale), startPointY + (int) (firstPointOfContour.y() * -scale), color);
+            drawLine(currentX, currentY, addmu(startPointX, glyph.getX(startPt), scale), addmu(startPointY, glyph.getY(startPt), -scale), color);
 
-            startPt = endPt + 1;
+            startPt = endPt;
         }
 
         return this;
     }
+*/
+    /*
 
+     */
+
+
+    private static double addmu(double a, double b, double c) {
+        return a + (b*c);
+    }
+
+    private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
+        if (glyph.getNumberOfContours() == 0) {
+            // ignore empty glyphs such as .notdef and spaces etc.
+            return this;
+        }
+
+        int[] endPts = glyph.getEndPtsOfContours();
+        int startPt = 0;
+        double currentX = x;
+        double currentY = addmu(y, glyph.getyMax(), scale);
+
+        for (int contour = 0; contour < endPts.length; contour++) {
+            int endPt = endPts[contour] + 1;
+            logger.info("Drawing contour: {}", contour);
+
+            currentX = addmu(currentX, glyph.getX(startPt), scale);
+            currentY = addmu(currentY, glyph.getY(startPt), -scale);
+
+            var coords = new ArrayList<ContourHorizontalIntersects.Coord>();
+            coords.add(new ContourHorizontalIntersects.Coord(currentX, currentY));
+
+            for(int i = startPt + 1; i < endPt; i++) {
+                double nextX = addmu(currentX, glyph.getX(i), scale);
+                double nextY = addmu(currentY, glyph.getY(i), -scale);
+
+                coords.add(new ContourHorizontalIntersects.Coord(nextX, nextY));
+
+                currentX = nextX;
+                currentY = nextY;
+            }
+
+            var it = ContourHorizontalIntersects.horizontalIntersects(coords);
+            while(it.hasNext()) {
+                var intersects = it.next();
+                var intersectY = intersects.y();
+                var intersectXs = intersects.xs();
+
+                for(int i = 1; i < intersectXs.length; i++) {
+                    drawLine(
+                            (int)Math.round(intersectXs[i-1]),
+                            (int)intersectY,
+                            (int)Math.round(intersectXs[i]),
+                            (int)intersectY,
+                            color);
+                }
+            }
+            startPt = endPt;
+        }
+
+        return this;
+    }
 
 
     public DrawableImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps) {

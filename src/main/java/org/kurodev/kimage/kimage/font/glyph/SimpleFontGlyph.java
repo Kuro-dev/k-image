@@ -104,6 +104,16 @@ public class SimpleFontGlyph implements FontGlyph {
     }
 
     @Override
+    public int getX(int index) {
+        return xCoordinates[index];
+    }
+
+    @Override
+    public int getY(int index) {
+        return yCoordinates[index];
+    }
+
+    @Override
     public int getAdvanceWidth() {
         return advanceWidth;
     }

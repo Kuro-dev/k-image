@@ -12,6 +12,10 @@ public interface FontGlyph {
 
     int[] getEndPtsOfContours();
 
+    int getX(int index);
+
+    int getY(int index);
+
     int getAdvanceWidth();
 
     int getxMin();
