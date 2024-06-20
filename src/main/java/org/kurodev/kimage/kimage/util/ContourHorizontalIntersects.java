@@ -1,5 +1,7 @@
 package org.kurodev.kimage.kimage.util;
 
+import org.kurodev.kimage.kimage.draw.DrawableImage;
+
 import java.util.*;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -133,11 +135,11 @@ public class ContourHorizontalIntersects {
                         }
                     }
 
-                    var xs = intersects.stream().mapToInt(Integer::valueOf).sorted().distinct().toArray();
+                    var xs = intersects.stream().mapToInt(Integer::valueOf).sorted().toArray();
                     assert true || xs.length % 2 == 0:
-                        "Y = %f in Slice [%d, %d) has %s intersects".formatted(
-                                y, yMin, yMax, Arrays.toString(xs)
-                        );
+                            "Y = %f in Slice [%d, %d) has %s intersects".formatted(
+                                    y, yMin, yMax, Arrays.toString(xs)
+                            );
                     return new HorizontalIntersects(y, xs);
                 } finally {
                     cursor++;

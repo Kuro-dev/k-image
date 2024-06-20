@@ -362,15 +362,16 @@ public class DrawableImage implements KImage {
             var intersectY = intersects.y();
             var intersectXs = intersects.xs();
 
-            if(true) {
-                logger.info("Checking y {}", intersectY);
+            {
+                logger.info("Checking y {} -> {}", intersectY, Arrays.toString(intersectXs));
                 for (int i = 1; i < intersectXs.length; i += 2) {
                     drawLine(
-                            (int) Math.round(intersectXs[i - 1]),
-                            (int) intersectY,
-                            (int) Math.round(intersectXs[i]),
-                            (int) intersectY,
-                            color); //intersectXs.length % 2 == 0 ? Color.GREEN : color);
+                            intersectXs[i - 1],
+                            intersectY,
+                            intersectXs[i],
+                            intersectY,
+                            color
+                    ); //intersectXs.length % 2 == 0 ? Color.GREEN : color);
                 }
             }
         }
