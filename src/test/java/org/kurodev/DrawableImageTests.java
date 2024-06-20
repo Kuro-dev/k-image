@@ -76,6 +76,7 @@ public class DrawableImageTests {
     public void contourTest() {
 
         var segments = List.of(
+                /* This is a non convex polygon, with different edge cases */
                 new ContourHorizontalIntersects.Segment(
                         new ContourHorizontalIntersects.Coord(2.0, 0.0),
                         new ContourHorizontalIntersects.Coord(0.0, 6.0)
@@ -99,6 +100,24 @@ public class DrawableImageTests {
                 new ContourHorizontalIntersects.Segment(
                         new ContourHorizontalIntersects.Coord(2.0, 4.0),
                         new ContourHorizontalIntersects.Coord(2.0, 0.0)
+                ),
+
+                /* This starts a square inside the polygon */
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(6.0, 3.0),
+                        new ContourHorizontalIntersects.Coord(6.0, 5.0)
+                ),
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(6.0, 5.0),
+                        new ContourHorizontalIntersects.Coord(7.0, 5.0)
+                ),
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(7.0, 5.0),
+                        new ContourHorizontalIntersects.Coord(7.0, 3.0)
+                ),
+                new ContourHorizontalIntersects.Segment(
+                        new ContourHorizontalIntersects.Coord(7.0, 3.0),
+                        new ContourHorizontalIntersects.Coord(6.0, 3.0)
                 )
         );
 

@@ -57,6 +57,8 @@ public class ContourHorizontalIntersects {
         }
 
         return new Iterator<>() {
+            static double STEP = 0.5;
+
             List<Integer> crossingSegmentIndices = null;
             int yMax, yMin;
             int cursor = -1;
@@ -68,7 +70,7 @@ public class ContourHorizontalIntersects {
                     return slices.hasNext();
                 } else {
                     assert crossingSegmentIndices != null;
-                    assert cursor + yMin <= yMax;
+                    assert cursor*STEP + yMin <= yMax;
                     assert cursor >= 0;
                     return true;
                 }
@@ -99,7 +101,7 @@ public class ContourHorizontalIntersects {
                     assert yMin <= yMax;
                 }
 
-                double y = cursor + yMin;
+                double y = cursor * STEP + yMin;
                 try {
                     ArrayList<Double> intersects = new ArrayList<>();
                     var it = crossingSegmentIndices.iterator();
@@ -113,7 +115,7 @@ public class ContourHorizontalIntersects {
                             It is not clear to me whether or not the cases yMin and yMax can be treated
                             in one shot.
                          */
-                        var workAroundY = y + (yMin == y ? 1 : -1) * Math.min(1, (yMax-yMin)) * 0.001;
+                        var workAroundY = y + (yMin == y ? 1 : -1) * Math.min(STEP, (yMax-yMin)) * 0.001;
                         while (it.hasNext()) {
                             int index = it.next();
                             var segment = segments.get(index);
@@ -137,7 +139,7 @@ public class ContourHorizontalIntersects {
                     return new HorizontalIntersects(y, xs);
                 } finally {
                     cursor++;
-                    if(yMin + cursor >= yMax) {
+                    if(yMin + cursor * STEP >= yMax) {
                         cursor = -1;
                         crossingSegmentIndices = null;
                     }
