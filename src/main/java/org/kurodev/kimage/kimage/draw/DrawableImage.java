@@ -390,23 +390,32 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, double fontSizeEM) {
+    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, int fontSize) {
         int lowestPPEM = font.getLowestRecommendedPPEM();
-        int emSizePixels = (int) Math.round(fontSizeEM * lowestPPEM); // Calculate font size in pixels based on em units
-
-        if (emSizePixels < lowestPPEM) {
-            logger.warn("Provided font size {} em is less than the lowest recommended size {} em. " +
-                    "This may result in poor rendering quality.", fontSizeEM, (double) lowestPPEM / lowestPPEM);
+        if (fontSize < lowestPPEM) {
+            logger.warn("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +
+                    " This may result in poor rendering quality.", fontSize, lowestPPEM);
+        }
+        if (fontSize % lowestPPEM != 0) {
+            int lowerRecommendation = ((int) Math.floor(((double) fontSize / lowestPPEM)) * lowestPPEM);
+            int higherRecommendation = ((int) Math.ceil(((double) fontSize / lowestPPEM)) * lowestPPEM);
+            logger.warn("fontsize is not a multiple of the lowest PPEM, and might look wrong. " +
+                    "Recommended alternative sizes to {}: {} or {}", fontSize, lowerRecommendation, higherRecommendation);
+            logger.warn("Enforcing fontsize: {}px", lowerRecommendation);
+            fontSize = lowerRecommendation;
         }
 
         int maxHeight = font.getTableValue(HeadTable.Y_MAX) - font.getTableValue(HeadTable.Y_MIN);
-
+        if (maxHeight == 0) {
+            logger.info("Attempted to draw only whitespace characters");
+            return this;
+        }
         int originalX = x;
         for (int i = 0; i < str.length(); i++) {
             char character = str.charAt(i);
 
             // Calculate the scale factor based on the target height
-            double scale = fontSizeEM * lowestPPEM / maxHeight;
+            double scale = (double) fontSize / maxHeight;
             if (character == '\n') {
                 y += (int) (maxHeight * scale);
                 x = originalX;
