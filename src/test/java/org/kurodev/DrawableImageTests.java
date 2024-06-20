@@ -66,7 +66,7 @@ public class DrawableImageTests {
         KImage img = new DrawableImage(1000, 300);
         img.fill(Color.WHITE);
         KFont font = KFont.getFont(Files.newInputStream(Path.of("./testfonts/Catways.ttf")));
-        String str = "B";
+        String str = "A";
         img.drawString(10, 50, str, Color.BLACK, font, 50);
         Files.write(Path.of("./test.png"), img.encode());
     }
