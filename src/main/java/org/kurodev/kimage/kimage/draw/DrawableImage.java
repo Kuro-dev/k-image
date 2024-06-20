@@ -14,7 +14,6 @@ import org.kurodev.kimage.kimage.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.text.Segment;
 import java.awt.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -47,6 +46,10 @@ public class DrawableImage implements KImage {
         }
     }
 
+    private static int addmu(int a, int b, double c) {
+        return a + (int) (b * c);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -74,7 +77,6 @@ public class DrawableImage implements KImage {
         }
         return this;
     }
-
 
     @Override
     public DrawableImage drawRect(int x, int y, int dx, int dy, Color color) {
@@ -218,63 +220,27 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    /*
-    private static int addmu(int a, int b, double c) {
-        return a + (int)(b*c);
-    }
-
     private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
-=======
-    private DrawableImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
->>>>>>> master
         if (glyph.getNumberOfContours() == 0) {
             // ignore empty glyphs such as spaces etc.
             return this;
         }
 
-<<<<<<< HEAD
-        int[] endPts = glyph.getEndPtsOfContours();
-        int startPt = 0;
-        int currentX = x;
-        int currentY = addmu(y, glyph.getyMax(), scale);
+        List<Coordinate> coords = new ArrayList<>();
 
-        for (int contour = 0; contour < endPts.length; contour++) {
-            int endPt = endPts[contour] + 1;
-            logger.info("Drawing contour: {}", contour);
-            // Store starting point of the contour
-            int startPointX = currentX;
-            int startPointY = currentY;
-
-            currentX = addmu(currentX, glyph.getX(startPt), scale);
-            currentY = addmu(currentY, glyph.getY(startPt), -scale);
-
-            for(int i = startPt + 1; i < endPt; i++) {
-                int nextX = addmu(currentX, glyph.getX(i), scale);
-                int nextY = addmu(currentY, glyph.getY(i), -scale);
-
-                drawLine(currentX, currentY, nextX, nextY, color);
-
-                currentX = nextX;
-                currentY = nextY;
-            }
-
-            // Draw closing line from last point to the first point in the contour
-            drawLine(currentX, currentY, addmu(startPointX, glyph.getX(startPt), scale), addmu(startPointY, glyph.getY(startPt), -scale), color);
-
-            startPt = endPt;
-=======
         Coordinate[][] contours = glyph.getCoordinates();
         Coordinate prev = null;
         for (Coordinate[] contour : contours) {
             prev = contour[0];
             for (int i = 1; i < contour.length; i++) {
                 Coordinate point = contour[i];
-                int prevX = (int) Math.round(x + (prev.x() * scale));
-                int prevY = (int) Math.round(y + (prev.y() * scale));
-                int nextX = (int) Math.round(x + (point.x() * scale));
-                int nextY = (int) Math.round(y + (point.y() * scale));
+                int prevX = addmu(x, prev.x(), scale);
+                int prevY = addmu(y, prev.y(), scale);
+                int nextX = addmu(x, point.x(), scale);
+                int nextY = addmu(y, point.y(), scale);
+                coords.add(new Coordinate(nextX, nextY));
                 if (point.flags().contains(GlyphFlag.ON_CURVE)) {
-                    drawLine(prevX, prevY, nextX, nextY, color);
+                    coords.addAll(Util.calculateLinePoints(prevX, prevY, nextX, nextY));
                     prev = point;
                 } else {
                     i++;
@@ -285,7 +251,7 @@ public class DrawableImage implements KImage {
                     int endY = (int) Math.round(y + (endPoint.y() * scale));
                     Coordinate end = new Coordinate(endX, endY);
                     //point is not on curve, and therefore should not be drawn
-                    drawBezierCurve(start, end, curve, color);
+                    coords.addAll(Util.calculateBezierCurve(start, end, curve, 5000));
                     if (i < contour.length)
                         prev = contour[i];
                 }
@@ -295,96 +261,16 @@ public class DrawableImage implements KImage {
             int firstY = (int) Math.round(y + (contour[0].y() * scale));
             int lastX = (int) Math.round(x + (contour[contour.length - 1].x() * scale));
             int lastY = (int) Math.round(y + (contour[contour.length - 1].y() * scale));
-            drawLine(firstX, firstY, lastX, lastY, color);
-            //fillGlyph(x, y, glyph, contour, scale, color);
->>>>>>> master
-        }
-        return this;
-    }
-*/
-    /*
+            coords.addAll(Util.calculateLinePoints(firstX, firstY, lastX, lastY));
 
-<<<<<<< HEAD
-     */
-
-
-    private static double addmu(double a, double b, double c) {
-        return a + (b*c);
-    }
-
-    private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
-        if (glyph.getNumberOfContours() == 0) {
-            // ignore empty glyphs such as .notdef and spaces etc.
-            return this;
         }
 
-        int[] endPts = glyph.getEndPtsOfContours();
-        int startPt = 0;
-        double currentX = x;
-        double currentY = addmu(y, glyph.getyMax(), scale);
-
-        var segments = new ArrayList<ContourHorizontalIntersects.Segment>();
-
-        for (int contour = 0; contour < endPts.length; contour++) {
-            int endPt = endPts[contour] + 1;
-            logger.info("Drawing contour: {}", contour);
-
-            currentX = addmu(currentX, glyph.getX(startPt), scale);
-            currentY = addmu(currentY, glyph.getY(startPt), -scale);
-
-            var coords = new ArrayList<ContourHorizontalIntersects.Coord>();
-            coords.add(new ContourHorizontalIntersects.Coord(currentX, currentY));
-
-            for(int i = startPt + 1; i < endPt; i++) {
-                double nextX = addmu(currentX, glyph.getX(i), scale);
-                double nextY = addmu(currentY, glyph.getY(i), -scale);
-
-                coords.add(new ContourHorizontalIntersects.Coord(nextX, nextY));
-
-                currentX = nextX;
-                currentY = nextY;
-            }
-
-            {
-                segments.add(new ContourHorizontalIntersects.Segment(coords.getLast(), coords.getFirst()));
-                for (int i = 1; i < coords.size(); i++) {
-                    var segment = new ContourHorizontalIntersects.Segment(coords.get(i - 1), coords.get(i));
-                    segments.add(segment);
-                }
-            }
-
-            startPt = endPt;
-        }
-
-
-        for(var segment: segments) {
-            drawLine(
-                    (int)Math.round(segment.a().x()),
-                    (int)Math.round(segment.a().y()),
-                    (int)Math.round(segment.b().x()),
-                    (int)Math.round(segment.b().y()),
-                    Color.RED
-            );
-        }
-
-
-        var it = ContourHorizontalIntersects.horizontalIntersects(segments);
-        while(it.hasNext()) {
-            var intersects = it.next();
-            var intersectY = intersects.y();
-            var intersectXs = intersects.xs();
-
-            if(true) {
-                logger.info("Checking y {}", intersectY);
-                for (int i = 1; i < intersectXs.length; i += 2) {
-                    drawLine(
-                            (int) Math.round(intersectXs[i - 1]),
-                            (int) intersectY,
-                            (int) Math.round(intersectXs[i]),
-                            (int) intersectY,
-                            color); //intersectXs.length % 2 == 0 ? Color.GREEN : color);
-                }
-            }
+        coords.parallelStream().forEach(c -> drawPixel(c, color));
+        var it = ContourHorizontalIntersects.horizontalIntersects(coords);
+        for (int i = 0; i < it.size(); i++) {
+            Coordinate coordinate = it.get(i);
+//            drawLine(coordinate, it.get(i - 1), color);
+            drawPixel(coordinate, Color.RED);
         }
 
         return this;
@@ -504,32 +390,23 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, int fontSize) {
+    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, double fontSizeEM) {
         int lowestPPEM = font.getLowestRecommendedPPEM();
-        if (fontSize < lowestPPEM) {
-            logger.warn("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +
-                    " This may result in poor rendering quality.", fontSize, lowestPPEM);
-        }
-        if (fontSize % lowestPPEM != 0) {
-            int lowerRecommendation = ((int) Math.floor(((double) fontSize / lowestPPEM)) * lowestPPEM);
-            int higherRecommendation = ((int) Math.ceil(((double) fontSize / lowestPPEM)) * lowestPPEM);
-            logger.warn("fontsize is not a multiple of the lowest PPEM, and might look wrong. " +
-                    "Recommended alternative sizes to {}: {} or {}", fontSize, lowerRecommendation, higherRecommendation);
-            logger.warn("Enforcing fontsize: {}px", lowerRecommendation);
-            fontSize = lowerRecommendation;
+        int emSizePixels = (int) Math.round(fontSizeEM * lowestPPEM); // Calculate font size in pixels based on em units
+
+        if (emSizePixels < lowestPPEM) {
+            logger.warn("Provided font size {} em is less than the lowest recommended size {} em. " +
+                    "This may result in poor rendering quality.", fontSizeEM, (double) lowestPPEM / lowestPPEM);
         }
 
         int maxHeight = font.getTableValue(HeadTable.Y_MAX) - font.getTableValue(HeadTable.Y_MIN);
-        if (maxHeight == 0) {
-            logger.info("Attempted to draw only whitespace characters");
-            return this;
-        }
+
         int originalX = x;
         for (int i = 0; i < str.length(); i++) {
             char character = str.charAt(i);
 
             // Calculate the scale factor based on the target height
-            double scale = (double) fontSize / maxHeight;
+            double scale = fontSizeEM * lowestPPEM / maxHeight;
             if (character == '\n') {
                 y += (int) (maxHeight * scale);
                 x = originalX;

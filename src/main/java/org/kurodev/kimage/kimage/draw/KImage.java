@@ -16,18 +16,28 @@ public interface KImage {
     }
 
     default KImage drawString(int x, int y, String str) {
-        return drawString(x, y, str, 32);
+        return drawString(x, y, str, 32d);
     }
 
-    default KImage drawString(int x, int y, String str, int fontSize) {
-        return drawString(x, y, str, Color.BLACK, FontReaders.getDefaultFontReader(), fontSize);
+    default KImage drawString(int x, int y, String str, double fontSizeEM) {
+        return drawString(x, y, str, Color.BLACK, FontReaders.getDefaultFontReader(), fontSizeEM);
     }
 
-    default KImage drawString(int x, int y, String str, Color color, int fontSize) {
-        return drawString(x, y, str, color, FontReaders.getDefaultFontReader(), fontSize);
+    default KImage drawString(int x, int y, String str, Color color, double fontSizeEM) {
+        return drawString(x, y, str, color, FontReaders.getDefaultFontReader(), fontSizeEM);
     }
 
-    KImage drawString(int x, int y, String str, Color color, KFont font, int fontSize);
+    /**
+     * Draws a given string
+     *
+     * @param x          X startpoint of the string
+     * @param y          y startpoint of the string
+     * @param str        the string to render
+     * @param color      the colour to render the string in
+     * @param font       the font
+     * @param fontSizeEM The size in EM
+     */
+    KImage drawString(int x, int y, String str, Color color, KFont font, double fontSizeEM);
 
     KImage drawPixel(int x, int y, Color color);
 
