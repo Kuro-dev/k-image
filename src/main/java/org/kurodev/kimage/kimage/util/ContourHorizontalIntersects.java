@@ -1,6 +1,7 @@
 package org.kurodev.kimage.kimage.util;
 
 import java.util.*;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -18,7 +19,11 @@ public class ContourHorizontalIntersects {
         }
 
         boolean crosses(Slice slice) {
-            return a.y < slice.highY && slice.lowY < b.y;
+            return a.y <= slice.highY && slice.lowY <= b.y;
+        }
+
+        boolean strictlyCrossesHorizontal(double y) {
+            return a.y < y && y < b.y;
         }
 
         double xIntersect(double y) {
@@ -40,27 +45,28 @@ public class ContourHorizontalIntersects {
 
         final Iterator<Slice> slices;
         {
-            var sortedCoords = Stream.concat(
-                    segments.stream().map(Segment::a),
-                    segments.stream().map(Segment::b)
-            ).sorted(Comparator.comparing(Coord::y).thenComparing(Coord::x)).toList();
+            var sortedCoords = segments.stream().filter(
+                    segment -> segment.a.y != segment.b.y
+            ).flatMap(
+                    segment -> Stream.of(segment.a, segment.b)
+            ).sorted(Comparator.comparing(Coord::y).thenComparing(Coord::x)).distinct().toList();
             slices = IntStream.range(1, sortedCoords.size()).mapToObj(
                     i -> new Slice(sortedCoords.get(i - 1).y, sortedCoords.get(i).y)
             ).distinct().iterator();
         }
 
         return new Iterator<>() {
-            List<Segment> crossingSegments = null;
+            List<Integer> crossingSegmentIndices = null;
             int yMax, yMin;
             int cursor = -1;
 
             @Override
             public boolean hasNext() {
                 if(cursor == -1) {
-                    assert crossingSegments == null;
+                    assert crossingSegmentIndices == null;
                     return slices.hasNext();
                 } else {
-                    assert crossingSegments != null;
+                    assert crossingSegmentIndices != null;
                     assert cursor + yMin <= yMax;
                     assert cursor >= 0;
                     return true;
@@ -73,25 +79,17 @@ public class ContourHorizontalIntersects {
 
                 if(cursor == -1) {
                     var slice = slices.next();
-                    crossingSegments = segments.stream()
-                            .filter(segment -> segment.crosses(slice))
-                            .toList();
+                    crossingSegmentIndices = new ArrayList<>();
                     {
-                        /*
-                        { // first segment goes from end to 0
-                            var segment = new Segment(coords.getLast(), coords.getFirst());
-                            if (segment.crosses(slice)) {
-                                crossingSegments.add(segment);
+                        var it = segments.iterator();
+                        var index = 0;
+                        while(it.hasNext()) {
+                            var segment = it.next();
+                            if(segment.crosses(slice)) {
+                                crossingSegmentIndices.add(index);
                             }
+                            index++;
                         }
-                        for (int i = 1; i < coords.size(); i++) {
-                            var segment = new Segment(coords.get(i - 1), coords.get(i));
-                            if (segment.crosses(slice)) {
-                                crossingSegments.add(segment);
-                            }
-                        }
-
-                         */
                     }
 
                     yMax = (int) slice.highY;
@@ -100,21 +98,47 @@ public class ContourHorizontalIntersects {
                     assert yMin <= yMax;
                 }
 
-                var y = cursor + yMin;
+                double y = cursor + yMin;
                 try {
-                    double[] xs = new double[crossingSegments.size()];
-                    for(int i = 0; i < xs.length; i++) {
-                        var segment = crossingSegments.get(i);
-                        xs[i] = segment.xIntersect(y);
+                    ArrayList<Double> intersects = new ArrayList<>();
+                    var it = crossingSegmentIndices.iterator();
+                    if(y == yMin || y == yMax) {
+                        while(it.hasNext()) {
+                            int index = it.next();
+                            var segment = segments.get(index);
+                            if(segment.strictlyCrossesHorizontal(y)) {
+                                intersects.add(segment.xIntersect(y));
+                            } else {
+                                /* TODO: The current segment crosses the boundary on a point.
+                                    The goal is to decide whether or not we should count that point
+                                    as an intersection point, or just skip it.
+                                    This depends on the angle the polygon is making w.r.t. the horizontal line.
+                                    There are some edge cases to consider, whether or not the segment is horizontal
+                                    itself.
+                                    It is not clear to me whether or not the cases yMin and yMax can be treated
+                                    in one shot.
+                                 */
+                            }
+                        }
+                    } else {
+                        while(it.hasNext()) {
+                            int index = it.next();
+                            var segment = segments.get(index);
+                            if(segment.strictlyCrossesHorizontal(y)) {
+                                intersects.add(segment.xIntersect(y));
+                            }
+                        }
                     }
+
+                    var xs = intersects.stream().mapToDouble(Double::valueOf).toArray();
                     Arrays.sort(xs);
-                    //assert xs.length % 2 == 0;
+                    /* TODO: this assertion should hold, at the end of the algorithm : assert xs.length % 2 == 0; */
                     return new HorizontalIntersects(y, xs);
                 } finally {
                     cursor++;
-                    if(yMin + cursor > yMax) {
+                    if(yMin + cursor >= yMax) {
                         cursor = -1;
-                        crossingSegments = null;
+                        crossingSegmentIndices = null;
                     }
                 }
             }

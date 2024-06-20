@@ -345,7 +345,8 @@ public class DrawableImage implements KImage {
                 currentY = nextY;
             }
 
-            {
+            logger.info("Number of contour is {}", endPts.length);
+            if(contour % 7 == 1) {
                 segments.add(new ContourHorizontalIntersects.Segment(coords.getLast(), coords.getFirst()));
                 for (int i = 1; i < coords.size(); i++) {
                     var segment = new ContourHorizontalIntersects.Segment(coords.get(i - 1), coords.get(i));
