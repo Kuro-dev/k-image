@@ -265,8 +265,8 @@ public class DrawableImage implements KImage {
 
         }
 
+        var it = ContourHorizontalIntersects.horizontalIntersects(coords, this);
         coords.parallelStream().forEach(c -> drawPixel(c, color));
-        var it = ContourHorizontalIntersects.horizontalIntersects(coords);
         for (int i = 0; i < it.size(); i++) {
             Coordinate coordinate = it.get(i);
 //            drawLine(coordinate, it.get(i - 1), color);

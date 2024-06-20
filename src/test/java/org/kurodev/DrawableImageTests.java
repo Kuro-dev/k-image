@@ -57,11 +57,11 @@ public class DrawableImageTests {
 
     @Test
     public void simpleTest() throws IOException {
-        KImage img = new DrawableImage(200, 200);
+        KImage img = new DrawableImage(50, 80);
         img.fill(Color.WHITE);
         KFont font = KFont.getFont(Files.newInputStream(Path.of("./testfonts/Catways.ttf")));
         String str = "A";
-        img.drawString(20, 100, str, Color.BLACK, font, 70);
+        img.drawString(1, 75, str, Color.BLACK, font, 70);
         Files.write(Path.of("./test.png"), img.encode());
     }
 
