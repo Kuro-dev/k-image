@@ -53,11 +53,12 @@ public class ContourHorizontalIntersects {
             ).filter(
                     slice -> slice.highY > slice.lowY
             ).distinct().toList();
+
             slices = fixedSlices.iterator();
         }
 
         return new Iterator<>() {
-            static double STEP = 0.5;
+            static double STEP = 1.0;
 
             List<Integer> crossingSegmentIndices = null;
             int yMax, yMin;
@@ -114,6 +115,7 @@ public class ContourHorizontalIntersects {
                             itself.
                             It is not clear to me whether or not the cases yMin and yMax can be treated
                             in one shot.
+
                          */
                         var workAroundY = y + (yMin == y ? 1 : -1) * Math.min(STEP, (yMax-yMin)) * 0.001;
                         while (it.hasNext()) {
@@ -133,9 +135,11 @@ public class ContourHorizontalIntersects {
                         }
                     }
 
-                    var xs = intersects.stream().mapToDouble(Double::valueOf).toArray();
-                    Arrays.sort(xs);
-                    //assert xs.length % 2 == 0;
+                    var xs = intersects.stream().mapToDouble(Double::valueOf).sorted().distinct().toArray();
+                    assert true || xs.length % 2 == 0:
+                        "Y = %f in Slice [%d, %d) has %s intersects".formatted(
+                                y, yMin, yMax, Arrays.toString(xs)
+                        );
                     return new HorizontalIntersects(y, xs);
                 } finally {
                     cursor++;

@@ -324,7 +324,7 @@ public class DrawableImage implements KImage {
         double currentY = addmu(y, glyph.getyMax(), scale);
 
         var segments = new ArrayList<ContourHorizontalIntersects.Segment>();
-        
+
         for (int contour = 0; contour < endPts.length; contour++) {
             int endPt = endPts[contour] + 1;
             logger.info("Drawing contour: {}", contour);
@@ -352,8 +352,21 @@ public class DrawableImage implements KImage {
                     segments.add(segment);
                 }
             }
+
             startPt = endPt;
         }
+
+
+        for(var segment: segments) {
+            drawLine(
+                    (int)Math.round(segment.a().x()),
+                    (int)Math.round(segment.a().y()),
+                    (int)Math.round(segment.b().x()),
+                    (int)Math.round(segment.b().y()),
+                    Color.RED
+            );
+        }
+
 
         var it = ContourHorizontalIntersects.horizontalIntersects(segments);
         while(it.hasNext()) {
@@ -361,13 +374,16 @@ public class DrawableImage implements KImage {
             var intersectY = intersects.y();
             var intersectXs = intersects.xs();
 
-            for(int i = 1; i < intersectXs.length; i++) {
-                drawLine(
-                        (int)Math.round(intersectXs[i-1]),
-                        (int)intersectY,
-                        (int)Math.round(intersectXs[i]),
-                        (int)intersectY,
-                        color);
+            if(true) {
+                logger.info("Checking y {}", intersectY);
+                for (int i = 1; i < intersectXs.length; i += 2) {
+                    drawLine(
+                            (int) Math.round(intersectXs[i - 1]),
+                            (int) intersectY,
+                            (int) Math.round(intersectXs[i]),
+                            (int) intersectY,
+                            color); //intersectXs.length % 2 == 0 ? Color.GREEN : color);
+                }
             }
         }
 
