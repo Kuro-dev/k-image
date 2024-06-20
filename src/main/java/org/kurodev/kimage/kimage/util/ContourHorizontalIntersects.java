@@ -6,7 +6,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class ContourHorizontalIntersects {
-    record Slice(double lowY, double highY) {}
+    record Slice(int lowY, int highY) {}
     public record Segment(Coord a, Coord b) {
         public Segment(Coord a, Coord b) {
             if (a.y < b.y) {
@@ -26,17 +26,17 @@ public class ContourHorizontalIntersects {
             return a.y < y && y < b.y;
         }
 
-        double xIntersect(double y) {
+        int xIntersect(double y) {
             if (a.y == b.y) {
                 return a.x;
             } else {
-                return (y - a.y) * (b.x - a.x) / (b.y - a.y) + a.x;
+                return (int)((y - a.y) * (b.x - a.x) / (double)(b.y - a.y) + a.x);
             }
         }
     }
-    public record Coord(double x, double y) {}
+    public record Coord(int x, int y) {}
 
-    public record HorizontalIntersects(double y, double[] xs) {}
+    public record HorizontalIntersects(int y, int[] xs) {}
 
     public static Iterator<HorizontalIntersects> horizontalIntersects(List<Segment> segments) {
         // Find vertical slices, that is: group the coords 2 by 2
@@ -58,8 +58,6 @@ public class ContourHorizontalIntersects {
         }
 
         return new Iterator<>() {
-            static double STEP = 1.0;
-
             List<Integer> crossingSegmentIndices = null;
             int yMax, yMin;
             int cursor = -1;
@@ -71,7 +69,7 @@ public class ContourHorizontalIntersects {
                     return slices.hasNext();
                 } else {
                     assert crossingSegmentIndices != null;
-                    assert cursor*STEP + yMin <= yMax;
+                    assert cursor + yMin <= yMax;
                     assert cursor >= 0;
                     return true;
                 }
@@ -96,15 +94,15 @@ public class ContourHorizontalIntersects {
                         }
                     }
 
-                    yMax = (int) slice.highY;
-                    yMin = (int) slice.lowY;
+                    yMax = slice.highY;
+                    yMin = slice.lowY;
                     cursor = 0;
                     assert yMin <= yMax;
                 }
 
-                double y = cursor * STEP + yMin;
+                var y = cursor + yMin;
                 try {
-                    ArrayList<Double> intersects = new ArrayList<>();
+                    ArrayList<Integer> intersects = new ArrayList<>();
                     var it = crossingSegmentIndices.iterator();
                     if(y == yMin || y == yMax) {
                         /* TODO: The current segment crosses the boundary on a point.
@@ -117,7 +115,7 @@ public class ContourHorizontalIntersects {
                             in one shot.
 
                          */
-                        var workAroundY = y + (yMin == y ? 1 : -1) * Math.min(STEP, (yMax-yMin)) * 0.001;
+                        var workAroundY = y + (yMin == y ? 1 : -1) * 0.001;
                         while (it.hasNext()) {
                             int index = it.next();
                             var segment = segments.get(index);
@@ -135,7 +133,7 @@ public class ContourHorizontalIntersects {
                         }
                     }
 
-                    var xs = intersects.stream().mapToDouble(Double::valueOf).sorted().distinct().toArray();
+                    var xs = intersects.stream().mapToInt(Integer::valueOf).sorted().distinct().toArray();
                     assert true || xs.length % 2 == 0:
                         "Y = %f in Slice [%d, %d) has %s intersects".formatted(
                                 y, yMin, yMax, Arrays.toString(xs)
@@ -143,7 +141,7 @@ public class ContourHorizontalIntersects {
                     return new HorizontalIntersects(y, xs);
                 } finally {
                     cursor++;
-                    if(yMin + cursor * STEP >= yMax) {
+                    if(yMin + cursor >= yMax) {
                         cursor = -1;
                         crossingSegmentIndices = null;
                     }

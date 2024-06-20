@@ -333,13 +333,13 @@ public class DrawableImage implements KImage {
             currentY = addmu(currentY, glyph.getY(startPt), -scale);
 
             var coords = new ArrayList<ContourHorizontalIntersects.Coord>();
-            coords.add(new ContourHorizontalIntersects.Coord(currentX, currentY));
+            coords.add(new ContourHorizontalIntersects.Coord((int)currentX, (int)currentY));
 
             for(int i = startPt + 1; i < endPt; i++) {
                 double nextX = addmu(currentX, glyph.getX(i), scale);
                 double nextY = addmu(currentY, glyph.getY(i), -scale);
 
-                coords.add(new ContourHorizontalIntersects.Coord(nextX, nextY));
+                coords.add(new ContourHorizontalIntersects.Coord((int)nextX, (int)nextY));
 
                 currentX = nextX;
                 currentY = nextY;
@@ -355,18 +355,6 @@ public class DrawableImage implements KImage {
 
             startPt = endPt;
         }
-
-
-        for(var segment: segments) {
-            drawLine(
-                    (int)Math.round(segment.a().x()),
-                    (int)Math.round(segment.a().y()),
-                    (int)Math.round(segment.b().x()),
-                    (int)Math.round(segment.b().y()),
-                    Color.RED
-            );
-        }
-
 
         var it = ContourHorizontalIntersects.horizontalIntersects(segments);
         while(it.hasNext()) {
