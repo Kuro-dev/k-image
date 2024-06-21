@@ -51,11 +51,10 @@ public class DrawableImageTests {
         img.fill(Color.WHITE);
         KFont font = KFont.getFont(Files.newInputStream(Path.of("./testfonts/Catways.ttf")));
         String str = """
-                The quick brown fox jumps over the lazy dog.
-                This is one singular big string with Different characters-
-                and sizes! ###
-                Maybe this will work, maybe it wont! :D
-                Who knows, I don't!
+                ACBEDGFIHKJMLONQPSRUTWVYXZ
+                abcdefghijklmnopqrstuvwxyz
+                0123456789
+                $/+-*/"&@#<>
                 """;
         img.drawString(10, 50, str, Color.BLACK, font, 50);
         Files.write(Path.of("./test.png"), img.encode());
@@ -66,48 +65,9 @@ public class DrawableImageTests {
         KImage img = new DrawableImage(1000, 300);
         img.fill(Color.WHITE);
         KFont font = KFont.getFont(Files.newInputStream(Path.of("./testfonts/Catways.ttf")));
-        String str = "B";
-        img.drawString(10, 50, str, Color.BLACK, font, 50);
+        String str = "h";
+        img.drawString(10, 100, str, Color.BLACK, font, 100);
         Files.write(Path.of("./test.png"), img.encode());
-    }
-
-
-    @Test
-    public void contourTest() {
-
-        var segments = List.of(
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(2.0, 0.0),
-                        new ContourHorizontalIntersects.Coord(0.0, 6.0)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(0.0, 6.0),
-                        new ContourHorizontalIntersects.Coord(8.0, 6.0)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(8.0, 6.0),
-                        new ContourHorizontalIntersects.Coord(8.0, 0.0)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(8.0, 0.0),
-                        new ContourHorizontalIntersects.Coord(4.0, 2.0)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(4.0, 2.0),
-                        new ContourHorizontalIntersects.Coord(2.0, 4.0)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(2.0, 4.0),
-                        new ContourHorizontalIntersects.Coord(2.0, 0.0)
-                )
-        );
-
-        var it = ContourHorizontalIntersects.horizontalIntersects(segments);
-
-        while (it.hasNext()) {
-            var intersect = it.next();
-            System.out.printf("Intersecting (%s, %s)\n", intersect.y(), Arrays.toString(intersect.xs()));
-        }
     }
 
     public void drawTest() throws IOException {

@@ -1,13 +1,25 @@
 package org.kurodev.kimage.kimage.util;
 
+import org.kurodev.kimage.kimage.draw.KImage;
+import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+
+import java.awt.*;
 import java.util.*;
-import java.util.stream.DoubleStream;
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class ContourHorizontalIntersects {
-    record Slice(double lowY, double highY) {}
-    public record Segment(Coord a, Coord b) {
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
+
+@FunctionalInterface
+public interface ContourHorizontalIntersects {
+    void drawPixels(KImage image, int x, int y, Color color);
+
+
+    record Slice(int lowY, int highY) {}
+
+    record Segment(Coord a, Coord b) {
         public Segment(Coord a, Coord b) {
             if (a.y < b.y) {
                 this.a = a;
@@ -26,123 +38,131 @@ public class ContourHorizontalIntersects {
             return a.y < y && y < b.y;
         }
 
-        double xIntersect(double y) {
+        int xIntersect(double y) {
             if (a.y == b.y) {
                 return a.x;
             } else {
-                return (y - a.y) * (b.x - a.x) / (b.y - a.y) + a.x;
+                return (int)((y - a.y) * (b.x - a.x) / (double)(b.y - a.y) + a.x);
             }
         }
     }
-    public record Coord(double x, double y) {}
 
-    public record HorizontalIntersects(double y, double[] xs) {}
+    public record HorizontalSegment(int xStart, int xEnd, int y) {
+        public void drawPixels(KImage image, int x, int y, Color color) {
+            for(int i = xStart; i <= xEnd; i++) {
+                image.drawPixel(i + x, y + this.y, color);
+            }
+        }
+    }
 
-    public static Iterator<HorizontalIntersects> horizontalIntersects(List<Segment> segments) {
-        // Find vertical slices, that is: group the coords 2 by 2
+    public record Coord(int x, int y) {}
 
-        // For each slice, find the relevant segment crossing the slice
+    static Stream<Slice> slices(List<Segment> segments) {
+        var sortedCoords = segments.stream().flatMap(
+                segment -> Stream.of(segment.a, segment.b)
+        ).sorted(Comparator.comparing(Coord::y)).mapToInt(Coord::y).distinct().toArray();
 
-        final Iterator<Slice> slices;
-        {
-            var sortedCoords = segments.stream().filter(
-                    segment -> segment.a.y != segment.b.y
-            ).flatMap(
-                    segment -> Stream.of(segment.a, segment.b)
-            ).sorted(Comparator.comparing(Coord::y).thenComparing(Coord::x)).distinct().toList();
-            slices = IntStream.range(1, sortedCoords.size()).mapToObj(
-                    i -> new Slice(sortedCoords.get(i - 1).y, sortedCoords.get(i).y)
-            ).distinct().iterator();
+        return IntStream.range(1, sortedCoords.length).mapToObj(
+                i -> new Slice(sortedCoords[i - 1], sortedCoords[i])
+        );
+    }
+
+    static List<Segment> crossingSegments(Slice slice, Iterable<Segment> allSegments) {
+        var segments = new ArrayList<Segment>();
+        for(var segment: allSegments) {
+            if(segment.crosses(slice)) {
+                segments.add(segment);
+            }
+        }
+        return unmodifiableList(segments);
+    }
+
+    static int[] horizontalIntersections(double y, Iterable<Segment> segments) {
+        var intersects = new ArrayList<Integer>();
+        for(var segment: segments) {
+            if (segment.strictlyCrossesHorizontal(y)) {
+                intersects.add(segment.xIntersect(y));
+            }
+        }
+        var xs = intersects.stream().mapToInt(Integer::valueOf).sorted().toArray();
+        assert xs.length % 2 == 0:
+                "Y = %f has %s intersects".formatted(y, Arrays.toString(xs));
+        return xs;
+    }
+
+    private static double addmu(double a, double b, double c) {
+        return a + (b*c);
+    }
+
+    static List<ContourHorizontalIntersects.Segment> segmentsOfGlyph(FontGlyph glyph, double scale) {
+        var endPts = glyph.getEndPtsOfContours();
+
+        var startPt = 0;
+
+        var currentX = 0.0;
+        var currentY = addmu(0.0, glyph.getyMax(), scale);
+
+        var segments = new ArrayList<ContourHorizontalIntersects.Segment>();
+
+        for (var pt : endPts) {
+            var endPt = pt + 1;
+
+            currentX = addmu(currentX, glyph.getX(startPt), scale);
+            currentY = addmu(currentY, glyph.getY(startPt), -scale);
+
+            var firstCoord = new ContourHorizontalIntersects.Coord((int) currentX, (int) currentY);
+            var currentCoord = firstCoord;
+
+            for (int i = startPt + 1; i < endPt; i++) {
+                var nextX = addmu(currentX, glyph.getX(i), scale);
+                var nextY = addmu(currentY, glyph.getY(i), -scale);
+
+                var nextCoord = new ContourHorizontalIntersects.Coord((int) nextX, (int) nextY);
+                segments.add(new ContourHorizontalIntersects.Segment(currentCoord, nextCoord));
+
+                currentCoord = nextCoord;
+                currentX = nextX;
+                currentY = nextY;
+            }
+
+            segments.add(new ContourHorizontalIntersects.Segment(currentCoord, firstCoord));
+
+            startPt = endPt;
         }
 
-        return new Iterator<>() {
-            List<Integer> crossingSegmentIndices = null;
-            int yMax, yMin;
-            int cursor = -1;
+        return unmodifiableList(segments);
+    }
 
-            @Override
-            public boolean hasNext() {
-                if(cursor == -1) {
-                    assert crossingSegmentIndices == null;
-                    return slices.hasNext();
-                } else {
-                    assert crossingSegmentIndices != null;
-                    assert cursor + yMin <= yMax;
-                    assert cursor >= 0;
-                    return true;
+    static Stream<HorizontalSegment> horizontalIntersects(List<Segment> segments) {
+        return slices(segments).flatMap(slice -> {
+            var crossingSegments = crossingSegments(slice, segments);
+            return IntStream.rangeClosed(slice.lowY, slice.highY).boxed().flatMap(y -> {
+                double effectiveY = y;
+                if (y == slice.lowY || y == slice.highY) {
+                    /* TODO: This is a workaround. There should be a way to do better. */
+                    effectiveY += (y == slice.lowY ? 1 : -1) * 0.001;
                 }
-            }
+                var xs = horizontalIntersections(effectiveY, crossingSegments);
 
-            @Override
-            public HorizontalIntersects next() {
-                if(!hasNext()) throw new NoSuchElementException();
+                return IntStream.range(0, xs.length / 2).mapToObj(
+                        i -> new HorizontalSegment(xs[2*i], xs[2*i+1], y)
+                );
+            });
+        });
+    }
 
-                if(cursor == -1) {
-                    var slice = slices.next();
-                    crossingSegmentIndices = new ArrayList<>();
-                    {
-                        var it = segments.iterator();
-                        var index = 0;
-                        while(it.hasNext()) {
-                            var segment = it.next();
-                            if(segment.crosses(slice)) {
-                                crossingSegmentIndices.add(index);
-                            }
-                            index++;
-                        }
-                    }
 
-                    yMax = (int) slice.highY;
-                    yMin = (int) slice.lowY;
-                    cursor = 0;
-                    assert yMin <= yMax;
+    static ContourHorizontalIntersects makeForGlyph(FontGlyph glyph, double scale) {
+        if(glyph.getNumberOfContours() == 0) {
+            return (image, x, y, color) -> {};
+        } else {
+            var segments = horizontalIntersects(segmentsOfGlyph(glyph, scale)).toList();
+            return (image, x, y, color) -> {
+                for(var segment: segments) {
+                    segment.drawPixels(image, x, y, color);
                 }
-
-                double y = cursor + yMin;
-                try {
-                    ArrayList<Double> intersects = new ArrayList<>();
-                    var it = crossingSegmentIndices.iterator();
-                    if(y == yMin || y == yMax) {
-                        while(it.hasNext()) {
-                            int index = it.next();
-                            var segment = segments.get(index);
-                            if(segment.strictlyCrossesHorizontal(y)) {
-                                intersects.add(segment.xIntersect(y));
-                            } else {
-                                /* TODO: The current segment crosses the boundary on a point.
-                                    The goal is to decide whether or not we should count that point
-                                    as an intersection point, or just skip it.
-                                    This depends on the angle the polygon is making w.r.t. the horizontal line.
-                                    There are some edge cases to consider, whether or not the segment is horizontal
-                                    itself.
-                                    It is not clear to me whether or not the cases yMin and yMax can be treated
-                                    in one shot.
-                                 */
-                            }
-                        }
-                    } else {
-                        while(it.hasNext()) {
-                            int index = it.next();
-                            var segment = segments.get(index);
-                            if(segment.strictlyCrossesHorizontal(y)) {
-                                intersects.add(segment.xIntersect(y));
-                            }
-                        }
-                    }
-
-                    var xs = intersects.stream().mapToDouble(Double::valueOf).toArray();
-                    Arrays.sort(xs);
-                    /* TODO: this assertion should hold, at the end of the algorithm : assert xs.length % 2 == 0; */
-                    return new HorizontalIntersects(y, xs);
-                } finally {
-                    cursor++;
-                    if(yMin + cursor >= yMax) {
-                        cursor = -1;
-                        crossingSegmentIndices = null;
-                    }
-                }
-            }
-        };
+            };
+        }
     }
 
 }
