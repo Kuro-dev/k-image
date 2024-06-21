@@ -2,7 +2,7 @@ package org.kurodev.kimage.kimage.util;
 
 import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.font.enums.Transformation;
-import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

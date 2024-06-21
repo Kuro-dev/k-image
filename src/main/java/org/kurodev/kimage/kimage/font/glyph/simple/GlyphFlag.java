@@ -1,4 +1,4 @@
-package org.kurodev.kimage.kimage.font.glyph;
+package org.kurodev.kimage.kimage.font.glyph.simple;
 
 import java.util.ArrayList;
 import java.util.List;

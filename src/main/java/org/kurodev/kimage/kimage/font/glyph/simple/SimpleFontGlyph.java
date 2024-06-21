@@ -1,5 +1,6 @@
-package org.kurodev.kimage.kimage.font.glyph;
+package org.kurodev.kimage.kimage.font.glyph.simple;
 
+import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,77 +81,6 @@ public class SimpleFontGlyph implements FontGlyph {
                 '}';
     }
 
-    public int getxMin() {
-        return xMin;
-    }
-
-    public int getyMin() {
-        return yMin;
-    }
-
-    public int getxMax() {
-        return xMax;
-    }
-
-    public int getyMax() {
-        return yMax;
-    }
-
-    private IntStream stream(ToIntFunction<Coordinate> function) {
-        List<Coordinate> list = new ArrayList<>();
-        Arrays.stream(getCoordinates()).forEach(coordinates -> Collections.addAll(list, coordinates));
-        return list.stream().mapToInt(function);
-    }
-
-    @Override
-    public int computeXmin() {
-        return stream(Coordinate::x).min().getAsInt();
-    }
-
-    @Override
-    public int computeYmin() {
-        return stream(Coordinate::y).min().getAsInt();
-    }
-
-    @Override
-    public int computeXmax() {
-        return stream(Coordinate::x).max().getAsInt();
-    }
-
-    @Override
-    public int computeYmax() {
-        return stream(Coordinate::y).max().getAsInt();
-    }
-
-    public int[] getxCoordinates() {
-        return xCoordinates;
-    }
-
-    public int[] getyCoordinates() {
-        return yCoordinates;
-    }
-
-    public byte[] getFlags() {
-        return flags;
-    }
-
-    public int[] getInstructions() {
-        return instructions;
-    }
-
-    public int[] getEndPtsOfContours() {
-        return endPtsOfContours;
-    }
-
-    @Override
-    public int getX(int index) {
-        return xCoordinates[index];
-    }
-
-    @Override
-    public int getY(int index) {
-        return yCoordinates[index];
-    }
 
     @Override
     public int getAdvanceWidth() {

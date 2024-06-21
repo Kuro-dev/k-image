@@ -1,6 +1,6 @@
 package org.kurodev.kimage.kimage.font.enums;
 
-import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 
 /**
  * Enum representing different types of transformations that can be applied to coordinates.

@@ -1,4 +1,4 @@
-package org.kurodev.kimage.kimage.font.glyph;
+package org.kurodev.kimage.kimage.font.glyph.simple;
 
 public class SimpleFontGlyphBuilder {
     private char character;

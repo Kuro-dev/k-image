@@ -2,7 +2,7 @@ package org.kurodev.kimage.kimage.font;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 
 import java.io.IOException;

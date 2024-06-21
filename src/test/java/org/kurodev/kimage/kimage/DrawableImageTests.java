@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.draw.DrawableImage;
 import org.kurodev.kimage.kimage.draw.KImage;
 import org.kurodev.kimage.kimage.font.KFont;
-import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 
 import java.awt.*;
 import java.io.IOException;

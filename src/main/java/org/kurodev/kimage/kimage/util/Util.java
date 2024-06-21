@@ -1,6 +1,6 @@
 package org.kurodev.kimage.kimage.util;
 
-import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 
 import java.util.*;
 

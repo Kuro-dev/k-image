@@ -1,5 +1,7 @@
 package org.kurodev.kimage.kimage.font.glyph;
 
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
+
 public interface FontGlyph {
 
     char getCharacter();
@@ -9,27 +11,9 @@ public interface FontGlyph {
      */
     Coordinate[][] getCoordinates();
 
-    int getNumberOfContours();
 
-    int[] getEndPtsOfContours();
-
-    int getX(int index);
-
-    int getY(int index);
 
     int getAdvanceWidth();
 
-    int getxMin();
-
-    int getyMin();
-
-    int getxMax();
-
-    int getyMax();
-
-    int computeXmin();
-    int computeYmin();
-    int computeXmax();
-    int computeYmax();
 
 }

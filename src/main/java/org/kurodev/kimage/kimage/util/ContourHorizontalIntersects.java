@@ -1,8 +1,7 @@
 package org.kurodev.kimage.kimage.util;
 
 import org.kurodev.kimage.kimage.draw.KImage;
-import org.kurodev.kimage.kimage.font.glyph.Coordinate;
-import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 
 import java.awt.*;
 import java.util.*;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
 public abstract class ContourHorizontalIntersects {

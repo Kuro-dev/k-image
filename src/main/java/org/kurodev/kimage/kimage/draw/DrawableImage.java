@@ -3,7 +3,7 @@ package org.kurodev.kimage.kimage.draw;
 import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.enums.Transformation;
-import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 import org.kurodev.kimage.kimage.img.ChunkHandler;
 import org.kurodev.kimage.kimage.img.SimplePng;

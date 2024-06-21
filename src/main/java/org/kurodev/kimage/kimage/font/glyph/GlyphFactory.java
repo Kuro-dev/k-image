@@ -1,5 +1,8 @@
 package org.kurodev.kimage.kimage.font.glyph;
 
+import org.kurodev.kimage.kimage.font.glyph.simple.SimpleFontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.simple.SimpleFontGlyphBuilder;
+
 import java.nio.ByteBuffer;
 
 public class GlyphFactory {

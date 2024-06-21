@@ -2,7 +2,7 @@ package org.kurodev.kimage.kimage.draw;
 
 import org.kurodev.kimage.kimage.font.FontReaders;
 import org.kurodev.kimage.kimage.font.KFont;
-import org.kurodev.kimage.kimage.font.glyph.Coordinate;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 
 import java.awt.*;
 
