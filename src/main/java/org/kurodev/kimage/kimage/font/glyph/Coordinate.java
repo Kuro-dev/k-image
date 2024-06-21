@@ -33,7 +33,7 @@ public record Coordinate(int x, int y, List<GlyphFlag> flags) {
         return Math.abs(x - other.x) + Math.abs(y - other.y);
     }
 
-    public Coordinate transform(Transformation transformation, int... params) {
+    public Coordinate transform(Transformation transformation, double... params) {
         return transformation.transform(this, params);
     }
 }

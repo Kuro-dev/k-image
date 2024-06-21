@@ -15,13 +15,13 @@ public enum Transformation {
      */
     TRANSLATE {
         @Override
-        public Coordinate transform(Coordinate coord, int... params) {
+        public Coordinate transform(Coordinate coord, double... params) {
             if (params.length != 2) {
                 throw new IllegalArgumentException("TRANSLATE transformation requires exactly 2 parameters: tx and ty.");
             }
-            int tx = params[0];
-            int ty = params[1];
-            return new Coordinate(coord.x() + tx, coord.y() + ty);
+            double tx = params[0];
+            double ty = params[1];
+            return new Coordinate((int) (coord.x() + tx), (int) (coord.y() + ty));
         }
     },
 
@@ -34,13 +34,13 @@ public enum Transformation {
      */
     SCALE {
         @Override
-        public Coordinate transform(Coordinate coord, int... params) {
+        public Coordinate transform(Coordinate coord, double... params) {
             if (params.length != 2) {
                 throw new IllegalArgumentException("SCALE transformation requires exactly 2 parameters: sx and sy.");
             }
-            int sx = params[0];
-            int sy = params[1];
-            return new Coordinate(coord.x() * sx, coord.y() * sy);
+            double sx = params[0];
+            double sy = params[1];
+            return new Coordinate((int) (coord.x() * sx), (int) (coord.y() * sy));
         }
     },
 
@@ -51,13 +51,13 @@ public enum Transformation {
      */
     ROTATE {
         @Override
-        public Coordinate transform(Coordinate coord, int... params) {
+        public Coordinate transform(Coordinate coord, double... params) {
             if (params.length != 1) {
                 throw new IllegalArgumentException("ROTATE transformation requires exactly 1 parameter: the angle in degrees.");
             }
             double theta = Math.toRadians(params[0]);
-            int x = coord.x();
-            int y = coord.y();
+            double x = coord.x();
+            double y = coord.y();
             int newX = (int) (x * Math.cos(theta) - y * Math.sin(theta));
             int newY = (int) (x * Math.sin(theta) + y * Math.cos(theta));
             return new Coordinate(newX, newY);
@@ -76,16 +76,16 @@ public enum Transformation {
      */
     SHEAR {
         @Override
-        public Coordinate transform(Coordinate coord, int... params) {
+        public Coordinate transform(Coordinate coord, double... params) {
             if (params.length != 2) {
                 throw new IllegalArgumentException("SHEAR transformation requires exactly 2 parameters: shx and shy.");
             }
-            int shx = params[0];
-            int shy = params[1];
+            double shx = params[0];
+            double shy = params[1];
             int x = coord.x();
             int y = coord.y();
-            int newX = x + shx * y;
-            int newY = y + shy * x;
+            int newX = (int) (x + shx * y);
+            int newY = (int) (y + shy * x);
             return new Coordinate(newX, newY);
         }
     };
@@ -98,5 +98,5 @@ public enum Transformation {
      *
      * @return The transformed coordinate.
      */
-    public abstract Coordinate transform(Coordinate coord, int... params);
+    public abstract Coordinate transform(Coordinate coord, double... params);
 }

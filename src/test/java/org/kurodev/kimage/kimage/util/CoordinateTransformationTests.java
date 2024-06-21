@@ -31,6 +31,9 @@ public class CoordinateTransformationTests {
 
         scaled = coord.transform(Transformation.SCALE, 1, -1);
         assertEquals(new Coordinate(10, -20), scaled);
+
+        scaled = coord.transform(Transformation.SCALE, 1.5, -1);
+        assertEquals(new Coordinate(15, -20), scaled);
     }
 
     @Test
