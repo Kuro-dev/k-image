@@ -1,21 +1,15 @@
-package org.kurodev;
+package org.kurodev.kimage.kimage;
 
 import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.draw.DrawableImage;
 import org.kurodev.kimage.kimage.draw.KImage;
 import org.kurodev.kimage.kimage.font.KFont;
-import org.kurodev.kimage.kimage.util.ContourHorizontalIntersects;
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 
 import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

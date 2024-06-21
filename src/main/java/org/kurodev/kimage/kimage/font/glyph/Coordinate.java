@@ -1,5 +1,7 @@
 package org.kurodev.kimage.kimage.font.glyph;
 
+import org.kurodev.kimage.kimage.font.enums.Transformation;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -29,5 +31,9 @@ public record Coordinate(int x, int y, List<GlyphFlag> flags) {
 
     public int distance(Coordinate other) {
         return Math.abs(x - other.x) + Math.abs(y - other.y);
+    }
+
+    public Coordinate transform(Transformation transformation, int... params) {
+        return transformation.transform(this, params);
     }
 }
