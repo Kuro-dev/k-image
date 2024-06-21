@@ -45,9 +45,9 @@ public class ContourHorizontalIntersects {
     }
 
     public record HorizontalSegment(int xStart, int xEnd, int y) {
-        public void drawPixels(KImage image, Color color) {
-            for(int x = xStart; x <= xEnd; x++) {
-                image.drawPixel(x, y, color);
+        public void drawPixels(KImage image, int x, int y, Color color) {
+            for(int i = xStart; i <= xEnd; i++) {
+                image.drawPixel(i + x, y + this.y, color);
             }
         }
     }
@@ -148,12 +148,19 @@ public class ContourHorizontalIntersects {
         });
     }
 
-    public static Iterable<HorizontalSegment> horizontalIntersects(FontGlyph glyph, double scale, int x, int y) {
-        if (glyph.getNumberOfContours() == 0) {
-            return emptyList();
+
+    final List<HorizontalSegment> segments;
+    public ContourHorizontalIntersects(FontGlyph glyph, double scale) {
+        if(glyph.getNumberOfContours() == 0) {
+            segments = emptyList();
         } else {
-            var segments = segmentsOfGlyph(glyph, x, y, scale);
-            return horizontalIntersects(segments)::iterator;
+            segments = horizontalIntersects(segmentsOfGlyph(glyph, 0, 0, scale)).toList();
+        }
+    }
+
+    public void drawPixels(KImage image, int x, int y, Color color) {
+        for(var segment: segments) {
+            segment.drawPixels(image, x, y, color);
         }
     }
 
