@@ -13,9 +13,8 @@ import java.util.stream.Stream;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
-@FunctionalInterface
-public interface ContourHorizontalIntersects {
-    void drawPixels(KImage image, int x, int y, Color color);
+public abstract class ContourHorizontalIntersects {
+    abstract public void drawPixels(KImage image, int x, int y, Color color);
 
 
     record Slice(int lowY, int highY) {}
@@ -48,7 +47,7 @@ public interface ContourHorizontalIntersects {
         }
     }
 
-    public record HorizontalSegment(int xStart, int xEnd, int y) {
+    record HorizontalSegment(int xStart, int xEnd, int y) {
         public void drawPixels(KImage image, int x, int y, Color color) {
             for(int i = xStart; i <= xEnd; i++) {
                 image.drawPixel(i + x, y + this.y, color);
@@ -187,15 +186,20 @@ public interface ContourHorizontalIntersects {
 
     /* Public API */
 
-    static ContourHorizontalIntersects makeForGlyph(FontGlyph glyph, double scale) {
-        Coordinate[][] contours = glyph.getCoordinates();
+    public static ContourHorizontalIntersects makeFromContour(Coordinate[][] contours, double scale) {
         if(contours == null || contours.length == 0) {
-            return (image, x, y, color) -> {};
+            return new ContourHorizontalIntersects() {
+                @Override
+                public void drawPixels(KImage image, int x, int y, Color color) {}
+            };
         } else {
             var segments = horizontalIntersects(segmentsOfContours(contours, scale)).toList();
-            return (image, x, y, color) -> {
-                for(var segment: segments) {
-                    segment.drawPixels(image, x, y, color);
+            return new ContourHorizontalIntersects() {
+                @Override
+                public void drawPixels(KImage image, int x, int y, Color color) {
+                    for(var segment: segments) {
+                        segment.drawPixels(image, x, y, color);
+                    }
                 }
             };
         }

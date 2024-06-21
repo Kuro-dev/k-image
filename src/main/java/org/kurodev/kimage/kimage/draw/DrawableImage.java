@@ -217,7 +217,7 @@ public class DrawableImage implements KImage {
     }
 
     private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
-        var intersectionSegments = ContourHorizontalIntersects.makeForGlyph(glyph, scale);
+        var intersectionSegments = ContourHorizontalIntersects.makeFromContour(glyph.getCoordinates(), scale);
         intersectionSegments.drawPixels(this, x, y, color);
 
         return this;
