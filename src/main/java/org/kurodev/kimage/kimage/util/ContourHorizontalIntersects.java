@@ -12,7 +12,10 @@ import java.util.stream.Stream;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
-public class ContourHorizontalIntersects {
+@FunctionalInterface
+public interface ContourHorizontalIntersects {
+    void drawPixels(KImage image, int x, int y, Color color);
+
 
     record Slice(int lowY, int highY) {}
 
@@ -91,13 +94,13 @@ public class ContourHorizontalIntersects {
         return a + (b*c);
     }
 
-    static List<ContourHorizontalIntersects.Segment> segmentsOfGlyph(FontGlyph glyph, double x, double y, double scale) {
+    static List<ContourHorizontalIntersects.Segment> segmentsOfGlyph(FontGlyph glyph, double scale) {
         var endPts = glyph.getEndPtsOfContours();
 
         var startPt = 0;
 
-        var currentX = x;
-        var currentY = addmu(y, glyph.getyMax(), scale);
+        var currentX = 0.0;
+        var currentY = addmu(0.0, glyph.getyMax(), scale);
 
         var segments = new ArrayList<ContourHorizontalIntersects.Segment>();
 
@@ -149,18 +152,16 @@ public class ContourHorizontalIntersects {
     }
 
 
-    final List<HorizontalSegment> segments;
-    public ContourHorizontalIntersects(FontGlyph glyph, double scale) {
+    static ContourHorizontalIntersects makeForGlyph(FontGlyph glyph, double scale) {
         if(glyph.getNumberOfContours() == 0) {
-            segments = emptyList();
+            return (image, x, y, color) -> {};
         } else {
-            segments = horizontalIntersects(segmentsOfGlyph(glyph, 0, 0, scale)).toList();
-        }
-    }
-
-    public void drawPixels(KImage image, int x, int y, Color color) {
-        for(var segment: segments) {
-            segment.drawPixels(image, x, y, color);
+            var segments = horizontalIntersects(segmentsOfGlyph(glyph, scale)).toList();
+            return (image, x, y, color) -> {
+                for(var segment: segments) {
+                    segment.drawPixels(image, x, y, color);
+                }
+            };
         }
     }
 
