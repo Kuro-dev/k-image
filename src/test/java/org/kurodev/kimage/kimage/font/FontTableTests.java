@@ -1,9 +1,8 @@
-package org.kurodev.font;
+package org.kurodev.kimage.kimage.font;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.font.enums.FontTableEntry;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.enums.HheaTable;

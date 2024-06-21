@@ -1,4 +1,4 @@
-package org.kurodev.font;
+package org.kurodev.kimage.kimage.font;
 
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 

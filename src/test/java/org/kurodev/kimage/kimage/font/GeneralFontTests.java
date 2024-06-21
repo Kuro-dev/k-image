@@ -1,10 +1,7 @@
-package org.kurodev.font;
+package org.kurodev.kimage.kimage.font;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kurodev.kimage.kimage.font.FontReader;
-import org.kurodev.kimage.kimage.font.FontReaders;
-import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 
@@ -13,7 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.kurodev.font.Helper.coordinatesForLetterA;
+import static org.kurodev.kimage.kimage.font.Helper.coordinatesForLetterA;
 
 public class GeneralFontTests {
 

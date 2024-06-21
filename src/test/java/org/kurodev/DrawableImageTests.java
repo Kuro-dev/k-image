@@ -70,64 +70,6 @@ public class DrawableImageTests {
         Files.write(Path.of("./test.png"), img.encode());
     }
 
-
-    @Test
-    public void contourTest() {
-
-        var segments = List.of(
-                /* This is a non convex polygon, with different edge cases */
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(2, 0),
-                        new ContourHorizontalIntersects.Coord(0, 6)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(0, 6),
-                        new ContourHorizontalIntersects.Coord(8, 6)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(8, 6),
-                        new ContourHorizontalIntersects.Coord(8, 0)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(8, 0),
-                        new ContourHorizontalIntersects.Coord(4, 2)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(4, 2),
-                        new ContourHorizontalIntersects.Coord(2, 4)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(2, 4),
-                        new ContourHorizontalIntersects.Coord(2, 0)
-                ),
-
-                /* This starts a square inside the polygon */
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(6, 3),
-                        new ContourHorizontalIntersects.Coord(6, 5)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(6, 5),
-                        new ContourHorizontalIntersects.Coord(7, 5)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(7, 5),
-                        new ContourHorizontalIntersects.Coord(7, 3)
-                ),
-                new ContourHorizontalIntersects.Segment(
-                        new ContourHorizontalIntersects.Coord(7, 3),
-                        new ContourHorizontalIntersects.Coord(6, 3)
-                )
-        );
-
-        var it = ContourHorizontalIntersects.horizontalIntersects(segments);
-
-        while (it.hasNext()) {
-            var intersect = it.next();
-            System.out.printf("Intersecting (%s, %s)\n", intersect.y(), Arrays.toString(intersect.xs()));
-        }
-    }
-
     public void drawTest() throws IOException {
         KImage img = new DrawableImage(200, 100);
         img.fill(Color.WHITE);
