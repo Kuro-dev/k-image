@@ -19,9 +19,9 @@ public abstract class ContourHorizontalIntersects {
 
     record Slice(int lowY, int highY) {}
 
-    record Segment(Coord a, Coord b) {
-        public Segment(Coord a, Coord b) {
-            if (a.y < b.y) {
+    record Segment(Coordinate a, Coordinate b) {
+        public Segment(Coordinate a, Coordinate b) {
+            if (a.y() < b.y()) {
                 this.a = a;
                 this.b = b;
             } else {
@@ -31,18 +31,18 @@ public abstract class ContourHorizontalIntersects {
         }
 
         boolean crosses(Slice slice) {
-            return a.y <= slice.highY && slice.lowY <= b.y;
+            return a.y() <= slice.highY && slice.lowY <= b.y();
         }
 
         boolean strictlyCrossesHorizontal(double y) {
-            return a.y < y && y < b.y;
+            return a.y() < y && y < b.y();
         }
 
         int xIntersect(double y) {
-            if (a.y == b.y) {
-                return a.x;
+            if (a.y() == b.y()) {
+                return a.x();
             } else {
-                return (int)((y - a.y) * (b.x - a.x) / (double)(b.y - a.y) + a.x);
+                return (int)((y - a.y()) * (b.x() - a.x()) / (double)(b.y() - a.y()) + a.x());
             }
         }
     }
@@ -55,12 +55,10 @@ public abstract class ContourHorizontalIntersects {
         }
     }
 
-    public record Coord(int x, int y) {}
-
     static Stream<Slice> slices(List<Segment> segments) {
         var sortedCoords = segments.stream().flatMap(
                 segment -> Stream.of(segment.a, segment.b)
-        ).sorted(Comparator.comparing(Coord::y)).mapToInt(Coord::y).distinct().toArray();
+        ).sorted(Comparator.comparing(Coordinate::y)).mapToInt(Coordinate::y).distinct().toArray();
 
         return IntStream.range(1, sortedCoords.length).mapToObj(
                 i -> new Slice(sortedCoords[i - 1], sortedCoords[i])
@@ -138,22 +136,20 @@ public abstract class ContourHorizontalIntersects {
     }
      */
 
-    static List<ContourHorizontalIntersects.Segment> segmentsOfContours(Coordinate[][] contours, double scale) {
+    static List<ContourHorizontalIntersects.Segment> segmentsOfContours(Coordinate[][] contours) {
         var segments = new ArrayList<ContourHorizontalIntersects.Segment>();
 
         for (var contour : contours) {
             if(contour.length > 0) {
 
-                var firstCoord = new ContourHorizontalIntersects.Coord(
-                        (int) (contour[0].x() * scale),
-                        (int) (contour[0].y() * scale)
+                var firstCoord = new Coordinate(
+                        contour[0].x(), contour[0].y()
                 );
                 var currentCoord = firstCoord;
 
                 for (int i = 1; i < contour.length; i++) {
-                    var nextCoord = new ContourHorizontalIntersects.Coord(
-                            (int) (contour[i].x() * scale),
-                            (int) (contour[i].y() * scale)
+                    var nextCoord = new Coordinate(
+                            contour[i].x(), contour[i].y()
                     );
                     segments.add(new ContourHorizontalIntersects.Segment(currentCoord, nextCoord));
                     currentCoord = nextCoord;
@@ -186,14 +182,14 @@ public abstract class ContourHorizontalIntersects {
 
     /* Public API */
 
-    public static ContourHorizontalIntersects makeFromContour(Coordinate[][] contours, double scale) {
+    public static ContourHorizontalIntersects makeFromContour(Coordinate[][] contours) {
         if(contours == null || contours.length == 0) {
             return new ContourHorizontalIntersects() {
                 @Override
                 public void drawPixels(KImage image, int x, int y, Color color) {}
             };
         } else {
-            var segments = horizontalIntersects(segmentsOfContours(contours, scale)).toList();
+            var segments = horizontalIntersects(segmentsOfContours(contours)).toList();
             return new ContourHorizontalIntersects() {
                 @Override
                 public void drawPixels(KImage image, int x, int y, Color color) {

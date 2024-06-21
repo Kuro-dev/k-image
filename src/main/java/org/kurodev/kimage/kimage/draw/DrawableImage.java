@@ -2,6 +2,7 @@ package org.kurodev.kimage.kimage.draw;
 
 import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
+import org.kurodev.kimage.kimage.font.enums.Transformation;
 import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 import org.kurodev.kimage.kimage.img.ChunkHandler;
@@ -217,7 +218,13 @@ public class DrawableImage implements KImage {
     }
 
     private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
-        var intersectionSegments = ContourHorizontalIntersects.makeFromContour(glyph.getCoordinates(), scale);
+        var glyphCoords = glyph.getCoordinates();
+        var scaledCoords = Arrays.stream(glyphCoords).map(
+                contour -> Arrays.stream(contour).map(
+                        coord -> Transformation.SCALE.transform(coord, scale, scale)
+                ).toArray(Coordinate[]::new)
+        ).toArray(Coordinate[][]::new);
+        var intersectionSegments = ContourHorizontalIntersects.makeFromContour(scaledCoords);
         intersectionSegments.drawPixels(this, x, y, color);
 
         return this;
