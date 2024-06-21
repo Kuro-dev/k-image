@@ -1,6 +1,7 @@
 package org.kurodev.kimage.kimage.util;
 
 import org.kurodev.kimage.kimage.draw.KImage;
+import org.kurodev.kimage.kimage.font.glyph.Coordinate;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 
 import java.awt.*;
@@ -94,6 +95,10 @@ public interface ContourHorizontalIntersects {
         return a + (b*c);
     }
 
+    /* TODO: This should be removed.
+        I kept it because it shows a light variation in the font size
+        Remove freely when we're sure we won't need it anymore.
+
     static List<ContourHorizontalIntersects.Segment> segmentsOfGlyph(FontGlyph glyph, double scale) {
         var endPts = glyph.getEndPtsOfContours();
 
@@ -132,6 +137,35 @@ public interface ContourHorizontalIntersects {
 
         return unmodifiableList(segments);
     }
+     */
+
+    static List<ContourHorizontalIntersects.Segment> segmentsOfContours(Coordinate[][] contours, double scale) {
+        var segments = new ArrayList<ContourHorizontalIntersects.Segment>();
+
+        for (var contour : contours) {
+            if(contour.length > 0) {
+
+                var firstCoord = new ContourHorizontalIntersects.Coord(
+                        (int) (contour[0].x() * scale),
+                        (int) (contour[0].y() * scale)
+                );
+                var currentCoord = firstCoord;
+
+                for (int i = 1; i < contour.length; i++) {
+                    var nextCoord = new ContourHorizontalIntersects.Coord(
+                            (int) (contour[i].x() * scale),
+                            (int) (contour[i].y() * scale)
+                    );
+                    segments.add(new ContourHorizontalIntersects.Segment(currentCoord, nextCoord));
+                    currentCoord = nextCoord;
+                }
+
+                segments.add(new ContourHorizontalIntersects.Segment(currentCoord, firstCoord));
+            }
+        }
+
+        return unmodifiableList(segments);
+    }
 
     static Stream<HorizontalSegment> horizontalIntersects(List<Segment> segments) {
         return slices(segments).flatMap(slice -> {
@@ -151,12 +185,14 @@ public interface ContourHorizontalIntersects {
         });
     }
 
+    /* Public API */
 
     static ContourHorizontalIntersects makeForGlyph(FontGlyph glyph, double scale) {
-        if(glyph.getNumberOfContours() == 0) {
+        Coordinate[][] contours = glyph.getCoordinates();
+        if(contours == null || contours.length == 0) {
             return (image, x, y, color) -> {};
         } else {
-            var segments = horizontalIntersects(segmentsOfGlyph(glyph, scale)).toList();
+            var segments = horizontalIntersects(segmentsOfContours(contours, scale)).toList();
             return (image, x, y, color) -> {
                 for(var segment: segments) {
                     segment.drawPixels(image, x, y, color);
