@@ -43,7 +43,7 @@ public abstract class ContourHorizontalIntersects {
             if (a.y() == b.y()) {
                 return a.x();
             } else {
-                return (int)((y - a.y()) * (b.x() - a.x()) / (double)(b.y() - a.y()) + a.x());
+                return (int)Math.round((y - a.y()) * (b.x() - a.x()) / (double)(b.y() - a.y()) + a.x());
             }
         }
     }
@@ -176,7 +176,7 @@ public abstract class ContourHorizontalIntersects {
     static Stream<HorizontalSegment> horizontalIntersects(List<Segment> segments) {
         return slices(segments).flatMap(slice -> {
             var crossingSegments = crossingSegments(slice, segments);
-            return IntStream.rangeClosed(slice.lowY, slice.highY).boxed().flatMap(y -> {
+            return IntStream.range(slice.lowY, slice.highY).boxed().flatMap(y -> {
                 double effectiveY = y;
                 if (y == slice.lowY || y == slice.highY) {
                     /* TODO: This is a workaround. There should be a way to do better. */
