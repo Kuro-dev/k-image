@@ -64,6 +64,7 @@ public class DrawableImageTests {
         Files.write(Path.of("./test.png"), img.encode());
     }
 
+    @Test
     public void drawTest() throws IOException {
         KImage img = new DrawableImage(200, 100);
         img.fill(Color.WHITE);
