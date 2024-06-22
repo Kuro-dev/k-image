@@ -1,12 +1,13 @@
 package org.kurodev.kimage.kimage.font.glyph.simple;
 
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
-import org.kurodev.kimage.kimage.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SimpleFontGlyph implements FontGlyph {
     private static final Logger logger = LoggerFactory.getLogger(SimpleFontGlyph.class);
@@ -131,22 +132,18 @@ public class SimpleFontGlyph implements FontGlyph {
             int contourSize = (contourIndex == 0) ? endPtsOfContours[contourIndex] + 1
                     : endPtsOfContours[contourIndex] - endPtsOfContours[contourIndex - 1];
 
-            List<Coordinate> contour = new ArrayList<>(contourSize);
-            Coordinate prev = null;
+            Coordinate[] contour = new Coordinate[contourSize];
+
             for (int i = 0; i < contourSize; i++) {
                 currentX += xCoordinates[pointIndex];
                 currentY += yCoordinates[pointIndex] * -1; //inverting Y to make the glyph draw upwards instead of downwards.
 
-                Coordinate next = new Coordinate(currentX, currentY);
-                if (prev != null) {
-                    contour.addAll(Util.calculateLinePoints(prev, next));
-                }
-                prev = next;
+                contour[i] = new Coordinate(currentX, currentY);
+
                 pointIndex++;
             }
-            //connect first and last point
-            contour.addAll(Util.calculateLinePoints(contour.getFirst(), prev));
-            coordinates[contourIndex] = contour.toArray(new Coordinate[0]);
+
+            coordinates[contourIndex] = contour;
         }
 
         return coordinates;
