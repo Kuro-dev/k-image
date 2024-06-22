@@ -378,6 +378,7 @@ public class DrawableImage implements KImage {
             var glyph = font.getGlyph(character);
             drawGlyph(x, y, glyph, color, scale);
             if (font.getFontFlags().contains(FontFlag.DEBUG_DRAW_BOUNDING_BOX)) {
+                //TODO fix this bounding box calculation, it is incorrect and doesn't capture the entire glyph, somehow
                 int boxX = (int) (x + glyph.getXMin() * scale);
                 int boxY = (int) (y + glyph.getYMin() * scale);
                 int boxDX = (int) (Math.abs(glyph.getXMin() - glyph.getXMax()) * scale);
