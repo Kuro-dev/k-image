@@ -16,12 +16,14 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class FontReader implements KFont {
     private static final Logger logger = LoggerFactory.getLogger(FontReader.class);
-
+    private final List<FontFlag> fontFlags = new ArrayList<>();
     private byte[] data;
     private int sfntVersion;
     private int numTables;
@@ -29,7 +31,6 @@ public class FontReader implements KFont {
     private int entrySelector;
     private int rangeShift;
     private TableEntry[] tableEntries;
-
 
     public void load(InputStream in) throws IOException {
         data = in.readAllBytes();
@@ -113,6 +114,11 @@ public class FontReader implements KFont {
             throw new IllegalArgumentException("Can only identify one glyph at the time");
         }
         return getGlyph(character.charAt(0));
+    }
+
+    @Override
+    public List<FontFlag> getFontFlags() {
+        return fontFlags;
     }
 
     @Override

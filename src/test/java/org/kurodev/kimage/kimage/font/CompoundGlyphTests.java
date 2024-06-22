@@ -25,6 +25,7 @@ public class CompoundGlyphTests {
     @BeforeAll
     public static void setUp() throws IOException {
         font = (FontReader) KFont.getFont(Files.newInputStream(Path.of("./testfonts/JetBrainsMono-Regular.ttf")));
+        font.getFontFlags().add(FontFlag.DEBUG_DRAW_BOUNDING_BOX);
     }
 
     @ParameterizedTest

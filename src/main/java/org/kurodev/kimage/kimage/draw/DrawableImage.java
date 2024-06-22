@@ -1,15 +1,16 @@
 package org.kurodev.kimage.kimage.draw;
 
+import org.kurodev.kimage.kimage.font.FontFlag;
 import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
-import org.kurodev.kimage.kimage.util.Transformation;
-import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 import org.kurodev.kimage.kimage.img.ChunkHandler;
 import org.kurodev.kimage.kimage.img.SimplePng;
 import org.kurodev.kimage.kimage.img.SimplePngDecoder;
 import org.kurodev.kimage.kimage.img.SimplePngEncoder;
 import org.kurodev.kimage.kimage.util.ContourHorizontalIntersects;
+import org.kurodev.kimage.kimage.util.Transformation;
 import org.kurodev.kimage.kimage.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -358,18 +359,17 @@ public class DrawableImage implements KImage {
             logger.warn("Enforcing fontsize: {}px", lowerRecommendation);
             fontSize = lowerRecommendation;
         }
-
         int maxHeight = font.getTableValue(HeadTable.Y_MAX) - font.getTableValue(HeadTable.Y_MIN);
         if (maxHeight == 0) {
             logger.info("Attempted to draw only whitespace characters");
             return this;
         }
         int originalX = x;
+        // Calculate the scale factor based on the target height
+        double scale = (double) fontSize / maxHeight;
         for (int i = 0; i < str.length(); i++) {
             char character = str.charAt(i);
 
-            // Calculate the scale factor based on the target height
-            double scale = (double) fontSize / maxHeight;
             if (character == '\n') {
                 y += (int) (maxHeight * scale);
                 x = originalX;
@@ -377,7 +377,18 @@ public class DrawableImage implements KImage {
             }
             var glyph = font.getGlyph(character);
             drawGlyph(x, y, glyph, color, scale);
-            x += (int) Math.ceil(glyph.getAdvanceWidth() * scale);
+            if (font.getFontFlags().contains(FontFlag.DEBUG_DRAW_BOUNDING_BOX)) {
+                int boxX = (int) (x + glyph.getXMin() * scale);
+                int boxY = (int) (y + glyph.getYMin() * scale);
+                int boxDX = (int) (Math.abs(glyph.getXMin() - glyph.getXMax()) * scale);
+                int boxDY = (int) -(Math.abs(glyph.getYMin() - glyph.getYMax()) * scale);
+                drawRect(boxX-2, boxY-2, boxDX+2, boxDY+2, Color.blue);
+            }
+            int nextX = (int) Math.ceil(glyph.getAdvanceWidth() * scale);
+            if (font.getFontFlags().contains(FontFlag.UNDERLINE)) {
+                drawLine(x, y + 5, nextX, y + 5, color);
+            }
+            x += nextX;
         }
         return this;
     }

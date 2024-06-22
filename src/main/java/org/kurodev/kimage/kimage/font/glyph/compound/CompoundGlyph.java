@@ -34,9 +34,8 @@ public class CompoundGlyph implements FontGlyph {
         this.advanceWidth = advanceWidth;
         this.xMin = xMin;
         this.xMax = xMax;
-        //this is necessary to ensure the glyph is drawn upright.
-        this.yMin = -yMax;
-        this.yMax = yMin;
+        this.yMin = yMin;
+        this.yMax = yMax;
     }
 
     @Override
