@@ -78,6 +78,10 @@ public class GlyphFactory {
     }
 
     public static CompoundGlyph readCompoundGlyph(ByteBuffer glyph, char character, int advanceWidth, KFont font) {
+        int xmin = glyph.getShort();
+        int ymin = glyph.getShort();
+        int xmax = glyph.getShort();
+        int ymax = glyph.getShort();
         List<GlyphWithFlags> glyphs = new ArrayList<>();
         do {
             glyphs.add(readCompoundSimpleGlyph(glyph, font));
@@ -98,6 +102,8 @@ public class GlyphFactory {
     }
 
     private static GlyphWithFlags readCompoundSimpleGlyph(ByteBuffer glyphBuffer, KFont font) {
+
+
         int bitmapFlags = glyphBuffer.getShort() & 0xFFFF;
         int glyphIndex = glyphBuffer.getShort() & 0xFFFF;
         List<CompoundGlyphFlag> flags = CompoundGlyphFlag.identify(bitmapFlags);

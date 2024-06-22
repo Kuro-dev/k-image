@@ -68,7 +68,7 @@ public class SimplePngEncoder {
         byte[] idatData = processImageData(simplePng.getImageData());
         byte[] compressedIdatData = DeflateCompression.compress(idatData);
         writeChunk(baos, "IDAT", compressedIdatData);
-        logger.info("Compressed image data from {} to {}",
+        logger.debug("Compressed image data from {} to {}",
                 Util.bytesToString(idatData.length),
                 Util.bytesToString(compressedIdatData.length));
 
@@ -91,7 +91,7 @@ public class SimplePngEncoder {
     }
 
     private void writeChunk(ByteArrayOutputStream stream, String type, byte[] data) throws IOException {
-        logger.info("Writing chunk: {}, Length: {}", type, Util.bytesToString(data.length));
+        logger.debug("Writing chunk: {}, Length: {}", type, Util.bytesToString(data.length));
 
         ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + data.length + 4);
         buffer.putInt(data.length);

@@ -1,21 +1,55 @@
 package org.kurodev.kimage.kimage.font;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.kurodev.kimage.kimage.font.glyph.compound.CompoundGlyph;
+import org.kurodev.kimage.kimage.font.glyph.compound.CompoundGlyphFlag;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CompoundGlyphTests {
+
+    private static FontReader font;
+
+    @BeforeAll
+    public static void setUp() throws IOException {
+        font = (FontReader) KFont.getFont(Files.newInputStream(Path.of("./testfonts/JetBrainsMono-Regular.ttf")));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "A, 1",
+            "Á, 2",
+            "B, 26",
+            "C, 27",
+            "D, 33",
+            "Ä, 16",
+            "|, 1470"
+    })
+    public void testCompoundGlyph(char character, int index) {
+        assertEquals(index, font.getGlyphIndex(character), "Incorrect glyph index for character '" + character + "'");
+    }
+
     @Test
-    public void testCompoundGlyph() throws IOException {
-        FontReader font = (FontReader) KFont.getFont(Files.newInputStream(Path.of("./testfonts/JetBrainsMono-Regular.ttf")));
-        assertEquals(1, font.getGlyphIndex('A'), "Incorrect glyph index");
-        FontGlyph glyph = font.getGlyph('A');
+    public void testCompoundGlyphFlags() throws IOException {
+        CompoundGlyph glyph = (CompoundGlyph) font.getGlyph('Ä');
+
         assertEquals(600, glyph.getAdvanceWidth());
-        System.out.println(glyph);
+        assertEquals('Ä', glyph.getCharacter());
+        assertEquals(2, glyph.getComponents().size());
+        assertEquals('A', glyph.getComponents().get(0).glyph().getCharacter());
+
+        //check correct flags
+        List<CompoundGlyphFlag> compound1Flags = CompoundGlyphFlag.identify(0x0226);
+        assertEquals(compound1Flags, glyph.getComponents().get(0).flags().flags());
+        List<CompoundGlyphFlag> compound2Flags = CompoundGlyphFlag.identify(0x7);
+        assertEquals(compound2Flags, glyph.getComponents().get(1).flags().flags());
     }
 }

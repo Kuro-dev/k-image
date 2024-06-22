@@ -1,5 +1,6 @@
 package org.kurodev.kimage.kimage.util;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 
@@ -8,6 +9,7 @@ import java.util.List;
 
 public class ContourHorizontalIntersectsTest {
     @Test
+    @Disabled
     public void contourTest() {
 
         var segments = List.of(

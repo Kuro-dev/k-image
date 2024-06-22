@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Optional;
 
 public class FontReader implements KFont {
@@ -52,9 +53,7 @@ public class FontReader implements KFont {
             tableEntries[i] = new TableEntry(tag, checkSum, offset, length);
         }
         logger.debug("tables: {}", numTables);
-        for (TableEntry entry : tableEntries) {
-            logger.debug("{}", entry);
-        }
+        Arrays.stream(tableEntries).forEach(entry -> logger.trace("{}", entry));
     }
 
     private Optional<TableEntry> getTableEntry(String tag) {
@@ -88,7 +87,7 @@ public class FontReader implements KFont {
      * @see HheaTable
      * @see MaxpTable
      */
-    private ByteBuffer getTableDataUnsafe(String tag) {
+    ByteBuffer getTableDataUnsafe(String tag) {
         var optional = getTableEntry(tag);
         if (optional.isPresent()) {
             var entry = optional.get();
@@ -105,80 +104,7 @@ public class FontReader implements KFont {
      * <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM07/appendixB.html">Documentation</a>
      */
     public int getGlyphIndex(char character) {
-        ByteBuffer cmap = getTableDataUnsafe("cmap");
-        cmap.position(cmap.position() + 2); // skip version
-        int numTables = cmap.getShort();
-        int unicodeCmapOffset = -1;
-
-        // Find the correct subtable
-        for (int i = 0; i < numTables; i++) {
-            int platformID = cmap.getShort();
-            int encodingID = cmap.getShort();
-            int offset = cmap.getInt();
-            if (platformID == 0 || (platformID == 3 && encodingID == 1)) { // Unicode or Microsoft Unicode format
-                unicodeCmapOffset = offset;
-                break;
-            }
-        }
-
-        if (unicodeCmapOffset == -1) {
-            logger.error("Suitable cmap subtable not found");
-            return -1;
-        }
-
-        cmap.position(unicodeCmapOffset);
-        int format = cmap.getShort();
-        if (format != 4) {
-            logger.error("Unsupported cmap format {}", format);
-            return -1;
-        }
-
-        // Read format 4 subtable
-        cmap.getShort(); // length
-        cmap.getShort(); // language
-        int segCountX2 = cmap.getShort();
-        int segCount = segCountX2 / 2;
-        cmap.getShort(); // searchRange
-        cmap.getShort(); // entrySelector
-        cmap.getShort(); // rangeShift
-
-        int[] endCounts = new int[segCount];
-        for (int i = 0; i < segCount; i++) {
-            endCounts[i] = cmap.getShort();
-        }
-
-        cmap.getShort(); // reservedPad
-
-        int[] startCounts = new int[segCount];
-        int[] idDeltas = new int[segCount];
-        int[] idRangeOffsets = new int[segCount];
-        for (int i = 0; i < segCount; i++) {
-            startCounts[i] = cmap.getShort();
-        }
-        for (int i = 0; i < segCount; i++) {
-            idDeltas[i] = cmap.getShort();
-        }
-        for (int i = 0; i < segCount; i++) {
-            idRangeOffsets[i] = cmap.getShort();
-        }
-
-        // Find the character index
-        for (int i = 0; i < segCount; i++) {
-            if (character >= startCounts[i] && character <= endCounts[i]) {
-                int index;
-                if (idRangeOffsets[i] == 0) {
-                    index = (character + idDeltas[i]) & 0xFFFF;
-                } else {
-                    int glyphIndexOffset = (idRangeOffsets[i] / 2 + (character - startCounts[i]) - (segCount - i));
-                    cmap.position(unicodeCmapOffset + glyphIndexOffset * 2);
-                    index = cmap.getShort() & 0xFFFF;
-                    index += idDeltas[i];
-                    index &= 0xFFFF;
-                }
-                return index;
-            }
-        }
-        return 0; // not found, returning .notdef index
+        return CmapTable.fromFontReader(this).getGlyphIndex(character);
     }
 
 
@@ -196,7 +122,8 @@ public class FontReader implements KFont {
 
     public FontGlyph getGlyph(char character) {
         long start = System.currentTimeMillis();
-        int glyphIndex = getGlyphIndex(character);
+        CmapTable cmapTable = CmapTable.fromFontReader(this);
+        int glyphIndex = cmapTable.getGlyphIndex(character);
         ByteBuffer glyf = getTableDataUnsafe("glyf");
         ByteBuffer loca = getTableDataUnsafe("loca");
 
@@ -205,15 +132,13 @@ public class FontReader implements KFont {
         int nextGlyphOffset;
 
         if (indexToLocFormat == 0) {
-            glyphOffset = loca.getShort(glyphIndex * 2) * 2;
+            //The actual local offset divided by 2 is stored.
+            glyphOffset = loca.getShort(glyphIndex * Short.BYTES) * 2;
             nextGlyphOffset = loca.getShort((glyphIndex + 1) * 2) * 2;
         } else {
-            glyphOffset = loca.getInt(glyphIndex * 4);
+            glyphOffset = loca.getInt(glyphIndex * Integer.BYTES);
             nextGlyphOffset = loca.getInt((glyphIndex + 1) * 4);
         }
-
-        logger.debug("glyphIndex: {}, glyphOffset: {}, nextGlyphOffset: {}", glyphIndex, glyphOffset, nextGlyphOffset);
-
 
         glyf.position(glyphOffset);
         short numberOfContours = glyf.getShort();
@@ -228,16 +153,17 @@ public class FontReader implements KFont {
 
 
         long end = System.currentTimeMillis();
-        logger.info("Loading glyph (index: {}) took {}ms", glyphIndex, end - start);
+        logger.debug("Loading glyph {} (index: {}) took {}ms", cmapTable.getCharacter(glyphIndex).orElse(' '), glyphIndex, end - start);
         return out;
     }
 
     @Override
     public FontGlyph getGlyph(int glyphIndex) {
         long start = System.currentTimeMillis();
+        CmapTable cmap = CmapTable.fromFontReader(this);
         ByteBuffer glyf = getTableDataUnsafe("glyf");
         ByteBuffer loca = getTableDataUnsafe("loca");
-        char character = ' '; //TODO: figure out a way to compute the character value
+        char character = cmap.getCharacter(glyphIndex).orElse(' ');
         int indexToLocFormat = getTableValue(HeadTable.INDEX_TO_LOC_FORMAT);
         int glyphOffset;
         int nextGlyphOffset;
@@ -266,7 +192,7 @@ public class FontReader implements KFont {
 
 
         long end = System.currentTimeMillis();
-        logger.info("Loading glyph (index: {}) took {}ms", glyphIndex, end - start);
+        logger.debug("Loading glyph '{}' (index: {}) took {}ms", character, glyphIndex, end - start);
         return out;
     }
 

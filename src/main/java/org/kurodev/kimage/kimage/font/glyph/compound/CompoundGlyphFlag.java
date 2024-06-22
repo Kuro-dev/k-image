@@ -4,8 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum CompoundGlyphFlag {
+    /**
+     * args are 16 bit (8 bit if not set)
+     */
     ARG_1_AND_2_ARE_WORDS(0b1),
+    /**
+     * Whether Arguments are signed xy values
+     **/
     ARGS_ARE_XY_VALUES(0b10),
+    /**
+     * Round xy to grid
+     */
     ROUND_XY_TO_GRID(0b100),
     WE_HAVE_A_SCALE(0b1_000),
     OBSOLETE(0b10_000),
