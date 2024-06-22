@@ -141,20 +141,7 @@ public class FontReader implements KFont {
         }
 
         glyf.position(glyphOffset);
-        short numberOfContours = glyf.getShort();
-        FontGlyph out;
-        if (glyphOffset == nextGlyphOffset) {
-            out = GlyphFactory.createWhitespace(character, getAdvanceWidth(glyphIndex)); // This glyph has no outline data.
-        } else if (numberOfContours < 0) {
-            out = GlyphFactory.readCompoundGlyph(glyf, character, getAdvanceWidth(glyphIndex), this);
-        } else {
-            out = GlyphFactory.readSimpleGlyph(glyf, numberOfContours, character, getAdvanceWidth(glyphIndex));
-        }
-
-
-        long end = System.currentTimeMillis();
-        logger.debug("Loading glyph {} (index: {}) took {}ms", cmapTable.getCharacter(glyphIndex).orElse(' '), glyphIndex, end - start);
-        return out;
+        return loadGlyph(glyphIndex, glyf, glyphOffset, nextGlyphOffset, character, start);
     }
 
     @Override
@@ -175,24 +162,26 @@ public class FontReader implements KFont {
             glyphOffset = loca.getInt(glyphIndex * 4);
             nextGlyphOffset = loca.getInt((glyphIndex + 1) * 4);
         }
+        return loadGlyph(glyphIndex, glyf, glyphOffset, nextGlyphOffset, character, start);
+    }
 
-        logger.debug("glyphIndex: {}, glyphOffset: {}, nextGlyphOffset: {}", glyphIndex, glyphOffset, nextGlyphOffset);
-
-
+    private FontGlyph loadGlyph(int glyphIndex, ByteBuffer glyf, int glyphOffset, int nextGlyphOffset, char character, long start) {
         glyf.position(glyphOffset);
         short numberOfContours = glyf.getShort();
         FontGlyph out;
+        String type; //just a marker for the log messages
         if (glyphOffset == nextGlyphOffset) {
             out = GlyphFactory.createWhitespace(character, getAdvanceWidth(glyphIndex)); // This glyph has no outline data.
+            type = "SimpleGlyph  ";
         } else if (numberOfContours < 0) {
             out = GlyphFactory.readCompoundGlyph(glyf, character, getAdvanceWidth(glyphIndex), this);
+            type = "CompoundGlyph";
         } else {
             out = GlyphFactory.readSimpleGlyph(glyf, numberOfContours, character, getAdvanceWidth(glyphIndex));
+            type = "SimpleGlyph  ";
         }
-
-
         long end = System.currentTimeMillis();
-        logger.debug("Loading glyph '{}' (index: {}) took {}ms", character, glyphIndex, end - start);
+        logger.debug("Loading {} '{}' (index: {}) took {}ms", type, character, glyphIndex, end - start);
         return out;
     }
 

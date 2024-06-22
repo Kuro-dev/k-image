@@ -102,8 +102,6 @@ public class GlyphFactory {
     }
 
     private static GlyphWithFlags readCompoundSimpleGlyph(ByteBuffer glyphBuffer, KFont font) {
-
-
         int bitmapFlags = glyphBuffer.getShort() & 0xFFFF;
         int glyphIndex = glyphBuffer.getShort() & 0xFFFF;
         List<CompoundGlyphFlag> flags = CompoundGlyphFlag.identify(bitmapFlags);

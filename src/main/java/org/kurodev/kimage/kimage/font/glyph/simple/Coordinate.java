@@ -1,6 +1,6 @@
 package org.kurodev.kimage.kimage.font.glyph.simple;
 
-import org.kurodev.kimage.kimage.font.enums.Transformation;
+import org.kurodev.kimage.kimage.util.Transformation;
 
 import java.util.Collections;
 import java.util.List;

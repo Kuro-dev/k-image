@@ -1,4 +1,4 @@
-package org.kurodev.kimage.kimage.font.enums;
+package org.kurodev.kimage.kimage.util;
 
 import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 

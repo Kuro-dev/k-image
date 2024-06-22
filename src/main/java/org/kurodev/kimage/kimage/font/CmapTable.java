@@ -71,7 +71,7 @@ public class CmapTable {
 
     public int getGlyphIndex(char character) {
         int format = getFormat(unicodeCmapOffset);
-        logger.debug("cmap format: {}", format);
+        logger.trace("cmap format: {}", format);
 
         switch (format) {
             case 4:
@@ -101,8 +101,7 @@ public class CmapTable {
             endCode[i] = cmapBuffer.getShort();
         }
 
-        int reservedPad = cmapBuffer.getShort(); // reservedPad
-        logger.debug("reservedPad: {}", reservedPad);
+         cmapBuffer.getShort(); // reservedPad, just ignore it, it's not used as of now.
 
         int[] startCode = new int[segCount];
         int[] idDelta = new int[segCount];
@@ -130,15 +129,14 @@ public class CmapTable {
                     if (index != 0) { // Ensure it's not the missing glyph
                         index = (index + idDelta[i]) & 0xFFFF;
                     }
-                    logger.debug("Character '{}' found in segment {}: glyphIndexOffset: {}, glyphPosition: {}, index: {}",
+                    logger.trace("Character '{}' found in segment {}: glyphIndexOffset: {}, glyphPosition: {}, index: {}",
                             character, i, glyphIndexOffset, glyphPosition, index);
                 }
-                logger.debug("Character '{}' -> Glyph Index: {}", character, index);
+                logger.trace("Character '{}' -> Glyph Index: {}", character, index);
                 return index;
             }
         }
 
-        logger.debug("Character '{}' not found, returning .notdef index", character);
         return 0; // not found, returning .notdef index
     }
 
@@ -160,12 +158,12 @@ public class CmapTable {
 
             if (character >= startCharCode && character <= endCharCode) {
                 int glyphIndex = startGlyphID + (character - startCharCode);
-                logger.debug("Character '{}' found in group {}: glyphIndex: {}", character, i, glyphIndex);
+                logger.trace("Character '{}' found in group {}: glyphIndex: {}", character, i, glyphIndex);
                 return glyphIndex;
             }
         }
 
-        logger.debug("Character '{}' not found, returning .notdef index", character);
+        logger.trace("Character '{}' not found, returning .notdef index", character);
         return 0; // not found, returning .notdef index
     }
 
@@ -205,8 +203,7 @@ public class CmapTable {
             endCode[i] = cmapBuffer.getShort();
         }
 
-        int reservedPad = cmapBuffer.getShort(); // reservedPad
-        logger.debug("reservedPad: {}", reservedPad);
+       cmapBuffer.getShort(); // reservedPad
 
         int[] startCode = new int[segCount];
         int[] idDelta = new int[segCount];
@@ -225,12 +222,12 @@ public class CmapTable {
             if (glyphIndex >= idDelta[i] && glyphIndex <= idDelta[i] + endCode[i] - startCode[i]) {
                 int glyphIdArrayIndex = idRangeOffset[i] / 2 + (glyphIndex - idDelta[i]) - (segCount - i);
                 int charCode = startCode[i] + glyphIdArrayIndex;
-                logger.debug("Glyph index '{}' corresponds to character '{}'", glyphIndex, (char) charCode);
+                logger.trace("Glyph index '{}' corresponds to character '{}'", glyphIndex, (char) charCode);
                 return Optional.of((char) charCode);
             }
         }
 
-        logger.debug("Glyph index '{}' does not correspond to any character", glyphIndex);
+        logger.trace("Glyph index '{}' does not correspond to any character", glyphIndex);
         return Optional.empty();
     }
 
@@ -252,12 +249,12 @@ public class CmapTable {
 
             if (glyphIndex >= startGlyphID && glyphIndex <= startGlyphID + (endCharCode - startCharCode)) {
                 int charCode = startCharCode + (glyphIndex - startGlyphID);
-                logger.debug("Glyph index '{}' corresponds to character '{}'", glyphIndex, (char) charCode);
+                logger.trace("Glyph index '{}' corresponds to character '{}'", glyphIndex, (char) charCode);
                 return Optional.of((char) charCode);
             }
         }
 
-        logger.debug("Glyph index '{}' does not correspond to any character", glyphIndex);
+        logger.trace("Glyph index '{}' does not correspond to any character", glyphIndex);
         return Optional.empty();
     }
 
