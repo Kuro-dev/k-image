@@ -27,6 +27,14 @@ public class SimpleFontGlyph implements FontGlyph {
      */
     private final int xMin, yMin, xMax, yMax;
 
+    public int[] getxCoordinates() {
+        return xCoordinates;
+    }
+
+    public int[] getyCoordinates() {
+        return yCoordinates;
+    }
+
     /**
      * uint8 || uint16
      */

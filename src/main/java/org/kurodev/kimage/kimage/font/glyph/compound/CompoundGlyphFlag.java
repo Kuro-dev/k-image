@@ -22,7 +22,7 @@ public enum CompoundGlyphFlag {
         this.bit = bit;
     }
 
-    public static List<CompoundGlyphFlag> identify(byte flag) {
+    public static List<CompoundGlyphFlag> identify(int flag) {
         var out = new ArrayList<CompoundGlyphFlag>();
         for (CompoundGlyphFlag value : values()) {
             if (value.check(flag)) {
@@ -47,7 +47,7 @@ public enum CompoundGlyphFlag {
      * @param flagsByte the byte of flags read from the glyph data.
      * @return true if this flag is set, false otherwise.
      */
-    public boolean check(byte flagsByte) {
+    public boolean check(int flagsByte) {
         return (flagsByte & this.bit) != 0;
     }
 }

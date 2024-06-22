@@ -106,10 +106,11 @@ public class FontReader implements KFont {
      */
     public int getGlyphIndex(char character) {
         ByteBuffer cmap = getTableDataUnsafe("cmap");
-        // Skipping the cmap table header and subtable headers to focus on a simple format 4 subtable
         cmap.position(cmap.position() + 2); // skip version
         int numTables = cmap.getShort();
         int unicodeCmapOffset = -1;
+
+        // Find the correct subtable
         for (int i = 0; i < numTables; i++) {
             int platformID = cmap.getShort();
             int encodingID = cmap.getShort();
@@ -119,17 +120,20 @@ public class FontReader implements KFont {
                 break;
             }
         }
+
         if (unicodeCmapOffset == -1) {
             logger.error("Suitable cmap subtable not found");
             return -1;
         }
+
         cmap.position(unicodeCmapOffset);
         int format = cmap.getShort();
         if (format != 4) {
             logger.error("Unsupported cmap format {}", format);
             return -1;
         }
-        // Reading specific format 4
+
+        // Read format 4 subtable
         cmap.getShort(); // length
         cmap.getShort(); // language
         int segCountX2 = cmap.getShort();
@@ -137,11 +141,14 @@ public class FontReader implements KFont {
         cmap.getShort(); // searchRange
         cmap.getShort(); // entrySelector
         cmap.getShort(); // rangeShift
+
         int[] endCounts = new int[segCount];
         for (int i = 0; i < segCount; i++) {
             endCounts[i] = cmap.getShort();
         }
+
         cmap.getShort(); // reservedPad
+
         int[] startCounts = new int[segCount];
         int[] idDeltas = new int[segCount];
         int[] idRangeOffsets = new int[segCount];
@@ -154,23 +161,26 @@ public class FontReader implements KFont {
         for (int i = 0; i < segCount; i++) {
             idRangeOffsets[i] = cmap.getShort();
         }
-        // Now i just need to find the character index
+
+        // Find the character index
         for (int i = 0; i < segCount; i++) {
             if (character >= startCounts[i] && character <= endCounts[i]) {
                 int index;
                 if (idRangeOffsets[i] == 0) {
-                    index = (character + idDeltas[i]) % 0x10000;
+                    index = (character + idDeltas[i]) & 0xFFFF;
                 } else {
-                    int offset = (character - startCounts[i]) * 2 + idRangeOffsets[i] + (i - segCount) * 2;
-                    cmap.position(unicodeCmapOffset + offset);
-                    index = cmap.getShort() + idDeltas[i];
-                    index = index % 0x10000;
+                    int glyphIndexOffset = (idRangeOffsets[i] / 2 + (character - startCounts[i]) - (segCount - i));
+                    cmap.position(unicodeCmapOffset + glyphIndexOffset * 2);
+                    index = cmap.getShort() & 0xFFFF;
+                    index += idDeltas[i];
+                    index &= 0xFFFF;
                 }
                 return index;
             }
         }
         return 0; // not found, returning .notdef index
     }
+
 
     public FontGlyph getGlyph(String character) {
         if (character.length() != 1) {
@@ -202,25 +212,64 @@ public class FontReader implements KFont {
             nextGlyphOffset = loca.getInt((glyphIndex + 1) * 4);
         }
 
-        if (glyphOffset == nextGlyphOffset) {
-            long end = System.currentTimeMillis();
-            logger.info("Loading glyph '{}' (index: {}) took {}ms", character, glyphIndex, end - start);
-            return GlyphFactory.createWhitespace(character, getAdvanceWidth(glyphIndex)); // This glyph has no outline data.
-        }
+        logger.debug("glyphIndex: {}, glyphOffset: {}, nextGlyphOffset: {}", glyphIndex, glyphOffset, nextGlyphOffset);
+
 
         glyf.position(glyphOffset);
         short numberOfContours = glyf.getShort();
-
-        if (numberOfContours < 0) {
-            throw new IllegalStateException("Composite glyphs are not supported yet.");
+        FontGlyph out;
+        if (glyphOffset == nextGlyphOffset) {
+            out = GlyphFactory.createWhitespace(character, getAdvanceWidth(glyphIndex)); // This glyph has no outline data.
+        } else if (numberOfContours < 0) {
+            out = GlyphFactory.readCompoundGlyph(glyf, character, getAdvanceWidth(glyphIndex), this);
+        } else {
+            out = GlyphFactory.readSimpleGlyph(glyf, numberOfContours, character, getAdvanceWidth(glyphIndex));
         }
 
-        var out = GlyphFactory.readSimpleGlyph(glyf, numberOfContours, glyphOffset, character, getAdvanceWidth(glyphIndex));
 
         long end = System.currentTimeMillis();
-        logger.info("Loading glyph '{}' (index: {}) took {}ms", character, glyphIndex, end - start);
+        logger.info("Loading glyph (index: {}) took {}ms", glyphIndex, end - start);
         return out;
     }
+
+    @Override
+    public FontGlyph getGlyph(int glyphIndex) {
+        long start = System.currentTimeMillis();
+        ByteBuffer glyf = getTableDataUnsafe("glyf");
+        ByteBuffer loca = getTableDataUnsafe("loca");
+        char character = ' '; //TODO: figure out a way to compute the character value
+        int indexToLocFormat = getTableValue(HeadTable.INDEX_TO_LOC_FORMAT);
+        int glyphOffset;
+        int nextGlyphOffset;
+
+        if (indexToLocFormat == 0) {
+            glyphOffset = loca.getShort(glyphIndex * 2) * 2;
+            nextGlyphOffset = loca.getShort((glyphIndex + 1) * 2) * 2;
+        } else {
+            glyphOffset = loca.getInt(glyphIndex * 4);
+            nextGlyphOffset = loca.getInt((glyphIndex + 1) * 4);
+        }
+
+        logger.debug("glyphIndex: {}, glyphOffset: {}, nextGlyphOffset: {}", glyphIndex, glyphOffset, nextGlyphOffset);
+
+
+        glyf.position(glyphOffset);
+        short numberOfContours = glyf.getShort();
+        FontGlyph out;
+        if (glyphOffset == nextGlyphOffset) {
+            out = GlyphFactory.createWhitespace(character, getAdvanceWidth(glyphIndex)); // This glyph has no outline data.
+        } else if (numberOfContours < 0) {
+            out = GlyphFactory.readCompoundGlyph(glyf, character, getAdvanceWidth(glyphIndex), this);
+        } else {
+            out = GlyphFactory.readSimpleGlyph(glyf, numberOfContours, character, getAdvanceWidth(glyphIndex));
+        }
+
+
+        long end = System.currentTimeMillis();
+        logger.info("Loading glyph (index: {}) took {}ms", glyphIndex, end - start);
+        return out;
+    }
+
 
     /**
      * @return The advanceWidth as an unsigned short value
