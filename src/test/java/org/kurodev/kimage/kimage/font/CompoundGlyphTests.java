@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.kurodev.kimage.kimage.draw.DrawableImage;
 import org.kurodev.kimage.kimage.draw.KImage;
+import org.kurodev.kimage.kimage.font.glyph.DebugFontStyles;
 import org.kurodev.kimage.kimage.font.glyph.compound.CompoundGlyph;
 import org.kurodev.kimage.kimage.font.glyph.compound.CompoundGlyphFlag;
 import org.kurodev.kimage.kimage.font.glyph.compound.GlyphWithFlags;
@@ -25,7 +26,6 @@ public class CompoundGlyphTests {
     @BeforeAll
     public static void setUp() throws IOException {
         font = (FontReader) KFont.getFont(Files.newInputStream(Path.of("./testfonts/JetBrainsMono-Regular.ttf")));
-        font.getFontFlags().add(FontFlag.DEBUG_DRAW_BOUNDING_BOX);
     }
 
     @ParameterizedTest
@@ -84,12 +84,20 @@ public class CompoundGlyphTests {
         KImage img = new DrawableImage(1000, 300);
         img.fill(Color.WHITE);
         String str = """
-                ÄÖÜiiiIII
-                abcdefghijklmnopqrstuvwxyz
-                0123456789
-                $/+-*/"&@#<>
+                The quick brown föx jumps över the lazy dögs.
+                Waltz, nymph, for quick jigs vex Mr. Blynx's päls.
+                Victor jagt zwölf Boxkämpfer quer über den großen Sylter Deich.
+                $/+-*/"&@#<>123456789 :)
                 """;
-        img.drawString(10, 50, str, Color.BLACK, font, 50);
+        img.drawString(10, 50, str, Color.BLACK, font, 40);
+        Files.write(Path.of("./test.png"), img.encode());
+    }
+    @Test
+    public void smallTest() throws IOException {
+        KImage img = new DrawableImage(100, 50);
+        img.fill(Color.WHITE);
+        String str = "Don't";
+        img.drawString(10, 45, str, Color.BLACK, font, 40);
         Files.write(Path.of("./test.png"), img.encode());
     }
 }

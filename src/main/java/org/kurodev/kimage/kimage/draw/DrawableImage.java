@@ -1,9 +1,9 @@
 package org.kurodev.kimage.kimage.draw;
 
-import org.kurodev.kimage.kimage.font.FontFlag;
 import org.kurodev.kimage.kimage.font.KFont;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.FontStyle;
 import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 import org.kurodev.kimage.kimage.img.ChunkHandler;
 import org.kurodev.kimage.kimage.img.SimplePng;
@@ -345,7 +345,7 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, int fontSize) {
+    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, int fontSize, FontStyle... styles) {
         int lowestPPEM = font.getLowestRecommendedPPEM();
         if (fontSize < lowestPPEM) {
             logger.warn("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +
@@ -377,18 +377,10 @@ public class DrawableImage implements KImage {
             }
             var glyph = font.getGlyph(character);
             drawGlyph(x, y, glyph, color, scale);
-            if (font.getFontFlags().contains(FontFlag.DEBUG_DRAW_BOUNDING_BOX)) {
-                //TODO fix this bounding box calculation, it is incorrect and doesn't capture the entire glyph, somehow
-                int boxX = (int) (x + glyph.getXMin() * scale);
-                int boxY = (int) (y + glyph.getYMin() * scale);
-                int boxDX = (int) (Math.abs(glyph.getXMin() - glyph.getXMax()) * scale);
-                int boxDY = (int) -(Math.abs(glyph.getYMin() - glyph.getYMax()) * scale);
-                drawRect(boxX-2, boxY-2, boxDX+2, boxDY+2, Color.blue);
+            for (FontStyle style : styles) {
+                style.apply(x, y, scale, glyph, this, font, color);
             }
             int nextX = (int) Math.ceil(glyph.getAdvanceWidth() * scale);
-            if (font.getFontFlags().contains(FontFlag.UNDERLINE)) {
-                drawLine(x, y + 5, nextX, y + 5, color);
-            }
             x += nextX;
         }
         return this;

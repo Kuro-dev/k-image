@@ -8,7 +8,6 @@ import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 public interface KFont {
 
@@ -20,8 +19,6 @@ public interface KFont {
     static KFont getFont(InputStream in) throws IOException {
         return FontReaders.loadFont(in);
     }
-
-   List<FontFlag> getFontFlags();
 
     int getLowestRecommendedPPEM();
 

@@ -16,14 +16,11 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 public class FontReader implements KFont {
     private static final Logger logger = LoggerFactory.getLogger(FontReader.class);
-    private final List<FontFlag> fontFlags = new ArrayList<>();
     private byte[] data;
     private int sfntVersion;
     private int numTables;
@@ -116,10 +113,6 @@ public class FontReader implements KFont {
         return getGlyph(character.charAt(0));
     }
 
-    @Override
-    public List<FontFlag> getFontFlags() {
-        return fontFlags;
-    }
 
     @Override
     public int getLowestRecommendedPPEM() {
