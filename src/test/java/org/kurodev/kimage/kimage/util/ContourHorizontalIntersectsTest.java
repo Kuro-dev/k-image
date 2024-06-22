@@ -2,15 +2,23 @@ package org.kurodev.kimage.kimage.util;
 
 import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
+import org.kurodev.kimage.kimage.draw.DrawableImage;
+import org.kurodev.kimage.kimage.draw.KImage;
+import org.kurodev.kimage.kimage.font.KFont;
 
+import java.awt.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 
 public class ContourHorizontalIntersectsTest {
-    @Test
-    public void contourTest() {
-
-        var segments = List.of(
+    private List<ContourHorizontalIntersects.Segment> segments1() {
+        return List.of(
                 /* This is a non convex polygon, with different edge cases */
                 new ContourHorizontalIntersects.Segment(
                         new Coordinate(2, 0),
@@ -55,6 +63,11 @@ public class ContourHorizontalIntersectsTest {
                         new Coordinate(6, 3)
                 )
         );
+    }
+
+    @Test
+    public void contourTest() {
+        var segments = segments1();
 
         var it = ContourHorizontalIntersects.horizontalIntersects(segments).iterator();
 
@@ -62,5 +75,25 @@ public class ContourHorizontalIntersectsTest {
             var intersect = it.next();
             System.out.printf("Intersecting y=%d, segment=[%d, %d]\n", intersect.y(), intersect.xStart(), intersect.xEnd());
         }
+    }
+
+    @Test
+    public void matrixTest() {
+        var segments = segments1();
+
+        var hSegments = ContourHorizontalIntersects.horizontalIntersects(segments).toList();
+        var matrix = ContourHorizontalIntersects.touchMatrix(hSegments);
+
+        assert matrix != null;
+    }
+
+    @Test
+    public void simpleTest() throws IOException {
+        KImage img = new DrawableImage(100, 60);
+        img.fill(Color.WHITE);
+        String str = ".";
+        var font = KFont.getFont(Files.newInputStream(Path.of("./testfonts/JetBrainsMono-Regular.ttf")));
+        img.drawString(50, 55, str, Color.BLACK, font, 50);
+        Files.write(Path.of("./test.png"), img.encode());
     }
 }

@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static java.lang.Integer.min;
+import static java.lang.Math.max;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
 public abstract class ContourHorizontalIntersects {
@@ -46,6 +49,16 @@ public abstract class ContourHorizontalIntersects {
     }
 
     record HorizontalSegment(int xStart, int xEnd, int y) {
+        HorizontalSegment(int xStart, int xEnd, int y) {
+            this.y = y;
+            if(xStart < xEnd) {
+                this.xStart = xStart;
+                this.xEnd = xEnd;
+            } else {
+                this.xStart = xEnd;
+                this.xEnd = xStart;
+            }
+        }
         public void drawPixels(KImage image, int x, int y, Color color) {
             for(int i = xStart; i <= xEnd; i++) {
                 image.drawPixel(i + x, y + this.y, color);
@@ -178,6 +191,40 @@ public abstract class ContourHorizontalIntersects {
         });
     }
 
+    static boolean[][] touchMatrix(List<HorizontalSegment> segments) {
+        final int yMin, yMax, xMin, xMax;
+        {
+            int minY = Integer.MAX_VALUE,
+                    maxY = Integer.MIN_VALUE,
+                    minX = Integer.MAX_VALUE,
+                    maxX = Integer.MIN_VALUE;
+
+            for(var segment: segments) {
+                minY = Math.min(minY, segment.y());
+                maxY = max(maxY, segment.y());
+                minX = Math.min(minX, segment.xStart());
+                maxX = max(maxX, segment.xEnd());
+            }
+
+            yMin = minY;
+            yMax = maxY;
+            xMin = minX;
+            xMax = maxX;
+        }
+
+        var matrix = new boolean[yMax - yMin + 1][xMax - xMin + 1];
+
+        for(var segment: segments) {
+            var j = segment.y() - yMin;
+            for(var i = 0; i < matrix[0].length; i++) {
+                var k = i + segment.xStart() - xMin;
+                matrix[j][k] = true;
+            }
+        }
+
+        return matrix;
+    }
+
     /* Public API */
 
     public static ContourHorizontalIntersects makeFromContour(Coordinate[][] contours) {
@@ -188,6 +235,7 @@ public abstract class ContourHorizontalIntersects {
             };
         } else {
             var segments = horizontalIntersects(segmentsOfContours(contours)).toList();
+            //var matrix = touchMatrix(segments);
             return new ContourHorizontalIntersects() {
                 @Override
                 public void drawPixels(KImage image, int x, int y, Color color) {
