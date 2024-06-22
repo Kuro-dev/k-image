@@ -73,7 +73,7 @@ public class CompoundGlyphTests {
     public void simpleTest() throws IOException {
         KImage img = new DrawableImage(100, 60);
         img.fill(Color.WHITE);
-        String str = "Ä";
+        String str = ".";
         img.drawString(50, 55, str, Color.BLACK, font, 50);
         Files.write(Path.of("./test.png"), img.encode());
     }
