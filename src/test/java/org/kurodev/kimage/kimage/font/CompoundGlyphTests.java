@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.kurodev.kimage.kimage.font.glyph.compound.CompoundGlyph;
 import org.kurodev.kimage.kimage.font.glyph.compound.CompoundGlyphFlag;
+import org.kurodev.kimage.kimage.font.glyph.compound.GlyphWithFlags;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,11 +45,23 @@ public class CompoundGlyphTests {
         assertEquals(600, glyph.getAdvanceWidth());
         assertEquals('Ä', glyph.getCharacter());
         assertEquals(2, glyph.getComponents().size());
-        assertEquals('A', glyph.getComponents().get(0).glyph().getCharacter());
-
+        //test data for the first compound
+        GlyphWithFlags glyph1 = glyph.getComponents().getFirst();
+        assertEquals('A', glyph1.glyph().getCharacter());
+        //offsets should be 0,0
+        assertEquals(0, glyph1.flags().params()[0]);
+        assertEquals(0, glyph1.flags().params()[1]);
         //check correct flags
         List<CompoundGlyphFlag> compound1Flags = CompoundGlyphFlag.identify(0x0226);
-        assertEquals(compound1Flags, glyph.getComponents().get(0).flags().flags());
+        assertEquals(compound1Flags, glyph1.flags().flags());
+
+        //test data for the second compound
+        GlyphWithFlags glyph2 = glyph.getComponents().get(1);
+        assertEquals('A', glyph1.glyph().getCharacter());
+        //offsets should be 600, 0
+        assertEquals(600, glyph2.flags().params()[0]);
+        assertEquals(0, glyph2.flags().params()[1]);
+        //check correct flags
         List<CompoundGlyphFlag> compound2Flags = CompoundGlyphFlag.identify(0x7);
         assertEquals(compound2Flags, glyph.getComponents().get(1).flags().flags());
     }
