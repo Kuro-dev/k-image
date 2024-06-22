@@ -9,11 +9,21 @@ public class CompoundGlyph implements FontGlyph {
     private final List<GlyphWithFlags> components;
     private final char character;
     private final int advanceWidth;
+    private final int xMin;
+    private final int xMax;
+    private final int yMin;
+    private final int yMax;
 
-    public CompoundGlyph(char character, int advanceWidth, List<GlyphWithFlags> components) {
+
+    public CompoundGlyph(char character, int advanceWidth, int xMin, int yMin, int xMax, int yMax, List<GlyphWithFlags> components) {
         this.components = components;
         this.character = character;
         this.advanceWidth = advanceWidth;
+        this.xMin = xMin;
+        this.xMax = xMax;
+        //this is necessary to ensure the glyph is drawn upright.
+        this.yMin = -yMax;
+        this.yMax = yMin;
     }
 
     @Override
@@ -33,5 +43,25 @@ public class CompoundGlyph implements FontGlyph {
 
     public List<GlyphWithFlags> getComponents() {
         return components;
+    }
+
+    @Override
+    public int getYMax() {
+        return yMax;
+    }
+
+    @Override
+    public int getXMax() {
+        return xMax;
+    }
+
+    @Override
+    public int getYMin() {
+        return yMin;
+    }
+
+    @Override
+    public int getXMin() {
+        return xMin;
     }
 }

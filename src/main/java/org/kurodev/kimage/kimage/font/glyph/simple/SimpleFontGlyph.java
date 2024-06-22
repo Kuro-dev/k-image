@@ -4,13 +4,6 @@ import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.ToIntFunction;
-import java.util.stream.IntStream;
-
 public class SimpleFontGlyph implements FontGlyph {
     private static final Logger logger = LoggerFactory.getLogger(SimpleFontGlyph.class);
     /**
@@ -25,23 +18,15 @@ public class SimpleFontGlyph implements FontGlyph {
     /**
      * int16
      */
-    private final int xMin, yMin, xMax, yMax;
-
-    public int[] getxCoordinates() {
-        return xCoordinates;
-    }
-
-    public int[] getyCoordinates() {
-        return yCoordinates;
-    }
-
+    private final int xMin;
+    private final int yMin;
+    private final int xMax;
+    private final int yMax;
     /**
      * uint8 || uint16
      */
     private final int[] xCoordinates, yCoordinates;
-
     private final byte[] flags;
-
     /**
      * uint16
      */
@@ -66,6 +51,36 @@ public class SimpleFontGlyph implements FontGlyph {
         this.instructions = instructions;
         this.endPtsOfContours = endPtsOfContours;
         this.advanceWidth = advanceWidth;
+    }
+
+    @Override
+    public int getYMax() {
+        //this is necessary to ensure the glyph is drawn upright.
+        return yMin;
+    }
+
+    @Override
+    public int getXMax() {
+        return xMax;
+    }
+
+    @Override
+    public int getYMin() {
+        //this is necessary to ensure the glyph is drawn upright.
+        return yMax *-1;
+    }
+
+    @Override
+    public int getXMin() {
+        return xMin;
+    }
+
+    public int[] getxCoordinates() {
+        return xCoordinates;
+    }
+
+    public int[] getyCoordinates() {
+        return yCoordinates;
     }
 
     /**

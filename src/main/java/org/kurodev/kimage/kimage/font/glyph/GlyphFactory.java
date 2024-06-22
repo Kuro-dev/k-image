@@ -78,15 +78,15 @@ public class GlyphFactory {
     }
 
     public static CompoundGlyph readCompoundGlyph(ByteBuffer glyph, char character, int advanceWidth, KFont font) {
-        int xmin = glyph.getShort();
-        int ymin = glyph.getShort();
-        int xmax = glyph.getShort();
-        int ymax = glyph.getShort();
+        int xMin = glyph.getShort();
+        int yMin = glyph.getShort();
+        int xMax = glyph.getShort();
+        int yMax = glyph.getShort();
         List<GlyphWithFlags> glyphs = new ArrayList<>();
         do {
             glyphs.add(readCompoundSimpleGlyph(glyph, font));
         } while (glyphs.getLast().contains(CompoundGlyphFlag.MORE_COMPONENTS));
-        return new CompoundGlyph(character, advanceWidth, glyphs);
+        return new CompoundGlyph(character, advanceWidth, xMin, yMin, xMax, yMax, glyphs);
     }
 
     public static FontGlyph createWhitespace(char character, int advanceWidth) {
