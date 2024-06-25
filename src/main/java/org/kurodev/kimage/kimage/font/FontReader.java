@@ -245,20 +245,20 @@ public class FontReader implements KFont {
     public void drawString(Drawable drawable, int x, int y, int fontSize, Color color, String str, FontStyle... styles) {
         int lowestPPEM = this.getLowestRecommendedPPEM();
         if (fontSize < lowestPPEM) {
-            logger.warn("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +
+            logger.debug("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +
                     " This may result in poor rendering quality.", fontSize, lowestPPEM);
         }
         if (fontSize % lowestPPEM != 0) {
             int lowerRecommendation = ((int) Math.floor(((double) fontSize / lowestPPEM)) * lowestPPEM);
             int higherRecommendation = ((int) Math.ceil(((double) fontSize / lowestPPEM)) * lowestPPEM);
-            logger.warn("fontsize is not a multiple of the lowest PPEM, and might look wrong. " +
+            logger.debug("fontsize is not a multiple of the lowest PPEM, and might look wrong. " +
                     "Recommended alternative sizes to {}: {} or {}", fontSize, lowerRecommendation, higherRecommendation);
-            logger.warn("Enforcing fontsize: {}px", lowerRecommendation);
+            logger.debug("Enforcing fontsize: {}px", lowerRecommendation);
             fontSize = lowerRecommendation;
         }
         int maxHeight = this.getTableValue(HeadTable.Y_MAX) - this.getTableValue(HeadTable.Y_MIN);
         if (maxHeight == 0) {
-            logger.info("Attempted to draw only whitespace characters");
+            logger.debug("Attempted to draw only whitespace characters");
             return;
         }
         int originalX = x;
