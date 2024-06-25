@@ -1,8 +1,10 @@
 package org.kurodev.kimage.kimage.font.glyph;
 
 import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
+import org.kurodev.kimage.kimage.util.Util;
 
 import java.awt.*;
+import java.util.List;
 
 public class DebugFontStyles {
     /**
@@ -53,7 +55,8 @@ public class DebugFontStyles {
             int rectWidth = (int) Math.ceil(maxX - minX);
             int rectHeight = (int) Math.ceil(maxY - minY);
             Color drawColor = color == null ? fallBack : color;
-            img.drawRect(rectX - 1, rectY - 1, rectWidth + 2, rectHeight + 2, drawColor);
+            Util.calculateRectanglePoints(rectX - 1, rectY - 1, rectWidth + 2, rectHeight + 2)
+                    .forEach(c -> img.drawPixel(c, drawColor));
         };
     }
 }

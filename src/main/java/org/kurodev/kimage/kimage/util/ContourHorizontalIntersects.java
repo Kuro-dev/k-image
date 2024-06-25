@@ -1,6 +1,7 @@
 package org.kurodev.kimage.kimage.util;
 
-import org.kurodev.kimage.kimage.draw.KImage;
+
+import org.kurodev.kimage.kimage.font.Drawable;
 import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 
 import java.awt.*;
@@ -12,10 +13,11 @@ import java.util.stream.Stream;
 import static java.util.Collections.unmodifiableList;
 
 public abstract class ContourHorizontalIntersects {
-    abstract public void drawPixels(KImage image, int x, int y, Color color);
+    abstract public void drawPixels(Drawable image, int x, int y, Color color);
 
 
-    record Slice(int lowY, int highY) {}
+    record Slice(int lowY, int highY) {
+    }
 
     record Segment(Coordinate a, Coordinate b) {
         public Segment(Coordinate a, Coordinate b) {
@@ -40,14 +42,14 @@ public abstract class ContourHorizontalIntersects {
             if (a.y() == b.y()) {
                 return a.x();
             } else {
-                return (int)((y - a.y()) * (b.x() - a.x()) / (double)(b.y() - a.y()) + a.x());
+                return (int) ((y - a.y()) * (b.x() - a.x()) / (double) (b.y() - a.y()) + a.x());
             }
         }
     }
 
     record HorizontalSegment(int xStart, int xEnd, int y) {
-        public void drawPixels(KImage image, int x, int y, Color color) {
-            for(int i = xStart; i <= xEnd; i++) {
+        public void drawPixels(Drawable image, int x, int y, Color color) {
+            for (int i = xStart; i <= xEnd; i++) {
                 image.drawPixel(i + x, y + this.y, color);
             }
         }
@@ -65,8 +67,8 @@ public abstract class ContourHorizontalIntersects {
 
     static List<Segment> crossingSegments(Slice slice, Iterable<Segment> allSegments) {
         var segments = new ArrayList<Segment>();
-        for(var segment: allSegments) {
-            if(segment.crosses(slice)) {
+        for (var segment : allSegments) {
+            if (segment.crosses(slice)) {
                 segments.add(segment);
             }
         }
@@ -75,19 +77,19 @@ public abstract class ContourHorizontalIntersects {
 
     static int[] horizontalIntersections(double y, Iterable<Segment> segments) {
         var intersects = new ArrayList<Integer>();
-        for(var segment: segments) {
+        for (var segment : segments) {
             if (segment.strictlyCrossesHorizontal(y)) {
                 intersects.add(segment.xIntersect(y));
             }
         }
         var xs = intersects.stream().mapToInt(Integer::valueOf).sorted().toArray();
-        assert xs.length % 2 == 0:
+        assert xs.length % 2 == 0 :
                 "Y = %f has %s intersects".formatted(y, Arrays.toString(xs));
         return xs;
     }
 
     private static double addmu(double a, double b, double c) {
-        return a + (b*c);
+        return a + (b * c);
     }
 
     /* TODO: This should be removed.
@@ -138,7 +140,7 @@ public abstract class ContourHorizontalIntersects {
         var segments = new ArrayList<ContourHorizontalIntersects.Segment>();
 
         for (var contour : contours) {
-            if(contour.length > 0) {
+            if (contour.length > 0) {
 
                 var firstCoord = new Coordinate(
                         contour[0].x(), contour[0].y()
@@ -172,7 +174,7 @@ public abstract class ContourHorizontalIntersects {
                 var xs = horizontalIntersections(effectiveY, crossingSegments);
 
                 return IntStream.range(0, xs.length / 2).mapToObj(
-                        i -> new HorizontalSegment(xs[2*i], xs[2*i+1], y)
+                        i -> new HorizontalSegment(xs[2 * i], xs[2 * i + 1], y)
                 );
             });
         });
@@ -181,17 +183,18 @@ public abstract class ContourHorizontalIntersects {
     /* Public API */
 
     public static ContourHorizontalIntersects makeFromContour(Coordinate[][] contours) {
-        if(contours == null || contours.length == 0) {
+        if (contours == null || contours.length == 0) {
             return new ContourHorizontalIntersects() {
                 @Override
-                public void drawPixels(KImage image, int x, int y, Color color) {}
+                public void drawPixels(Drawable image, int x, int y, Color color) {
+                }
             };
         } else {
             var segments = horizontalIntersects(segmentsOfContours(contours)).toList();
             return new ContourHorizontalIntersects() {
                 @Override
-                public void drawPixels(KImage image, int x, int y, Color color) {
-                    for(var segment: segments) {
+                public void drawPixels(Drawable image, int x, int y, Color color) {
+                    for (var segment : segments) {
                         segment.drawPixels(image, x, y, color);
                     }
                 }

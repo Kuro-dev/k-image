@@ -78,10 +78,9 @@ public class DrawableImage implements KImage {
 
     @Override
     public DrawableImage drawRect(int x, int y, int dx, int dy, Color color) {
-        drawLine(x, y, x + dx, y, color); //horizontal top line
-        drawLine(x, y + dy, x + dx, y + dy, color); //horizontal bottom line
-        drawLine(x, y, x, y + dy, color); //vertical left line
-        drawLine(x + dx, y, x + dx, y + dy + 1, color); //vertical right line
+        List<Coordinate> points = Util.calculateRectanglePoints(x, y, dx, dy);
+        points.parallelStream().forEach(c -> drawPixel(c, color));
+
         return this;
     }
 
@@ -218,20 +217,6 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    private KImage drawGlyph(int x, int y, FontGlyph glyph, Color color, double scale) {
-        var glyphCoords = glyph.getCoordinates();
-        var scaledCoords = Arrays.stream(glyphCoords).map(
-                contour -> Arrays.stream(contour).map(
-                        coord -> Transformation.SCALE.transform(coord, scale, scale)
-                ).toArray(Coordinate[]::new)
-        ).toArray(Coordinate[][]::new);
-        var intersectionSegments = ContourHorizontalIntersects.makeFromContour(scaledCoords);
-        intersectionSegments.drawPixels(this, x, y, color);
-
-        return this;
-    }
-
-
     @Override
     public DrawableImage drawBezierCurve(Coordinate start, Coordinate end, Coordinate curve, Color color, int steps) {
         Set<Coordinate> points = Util.calculateBezierCurve(start, end, curve, steps);
@@ -346,43 +331,7 @@ public class DrawableImage implements KImage {
     }
 
     public DrawableImage drawString(int x, int y, String str, Color color, KFont font, int fontSize, FontStyle... styles) {
-        int lowestPPEM = font.getLowestRecommendedPPEM();
-        if (fontSize < lowestPPEM) {
-            logger.warn("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +
-                    " This may result in poor rendering quality.", fontSize, lowestPPEM);
-        }
-        if (fontSize % lowestPPEM != 0) {
-            int lowerRecommendation = ((int) Math.floor(((double) fontSize / lowestPPEM)) * lowestPPEM);
-            int higherRecommendation = ((int) Math.ceil(((double) fontSize / lowestPPEM)) * lowestPPEM);
-            logger.warn("fontsize is not a multiple of the lowest PPEM, and might look wrong. " +
-                    "Recommended alternative sizes to {}: {} or {}", fontSize, lowerRecommendation, higherRecommendation);
-            logger.warn("Enforcing fontsize: {}px", lowerRecommendation);
-            fontSize = lowerRecommendation;
-        }
-        int maxHeight = font.getTableValue(HeadTable.Y_MAX) - font.getTableValue(HeadTable.Y_MIN);
-        if (maxHeight == 0) {
-            logger.info("Attempted to draw only whitespace characters");
-            return this;
-        }
-        int originalX = x;
-        // Calculate the scale factor based on the target height
-        double scale = (double) fontSize / maxHeight;
-        for (int i = 0; i < str.length(); i++) {
-            char character = str.charAt(i);
-
-            if (character == '\n') {
-                y += (int) (maxHeight * scale);
-                x = originalX;
-                continue;
-            }
-            var glyph = font.getGlyph(character);
-            drawGlyph(x, y, glyph, color, scale);
-            for (FontStyle style : styles) {
-                style.apply(x, y, scale, glyph, this, font, color);
-            }
-            int nextX = (int) Math.ceil(glyph.getAdvanceWidth() * scale);
-            x += nextX;
-        }
+        font.drawString(this, x, y, fontSize, color, str, styles);
         return this;
     }
 
