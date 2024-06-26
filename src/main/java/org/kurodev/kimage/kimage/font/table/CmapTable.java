@@ -1,4 +1,4 @@
-package org.kurodev.kimage.kimage.font;
+package org.kurodev.kimage.kimage.font.table;
 
 import org.kurodev.kimage.kimage.font.enums.CmapEncodingID;
 import org.kurodev.kimage.kimage.font.enums.CmapPlatformID;
@@ -20,11 +20,6 @@ public class CmapTable {
     public CmapTable(ByteBuffer cmapBuffer) {
         this.cmapBuffer = cmapBuffer;
         findUnicodeCmapSubtable();
-    }
-
-    public static CmapTable fromFontReader(FontReader fontReader) {
-        ByteBuffer cmapBuffer = fontReader.getTableDataUnsafe("cmap");
-        return new CmapTable(cmapBuffer);
     }
 
     private void findUnicodeCmapSubtable() {
