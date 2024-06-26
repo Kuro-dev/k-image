@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -64,6 +62,7 @@ public class DrawableImageTests {
         Files.write(Path.of("./test.png"), img.encode());
     }
 
+    @Test
     public void drawTest() throws IOException {
         KImage img = new DrawableImage(200, 100);
         img.fill(Color.WHITE);

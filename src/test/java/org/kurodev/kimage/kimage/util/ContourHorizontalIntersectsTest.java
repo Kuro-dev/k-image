@@ -12,9 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 
 public class ContourHorizontalIntersectsTest {
     private List<ContourHorizontalIntersects.Segment> segments1() {

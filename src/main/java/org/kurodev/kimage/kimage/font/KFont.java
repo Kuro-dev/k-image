@@ -24,6 +24,8 @@ public interface KFont {
 
     FontGlyph getGlyph(char character);
 
+    FontGlyph getGlyph(int index);
+
     /**
      * Gets a value from a corresponding table.
      *

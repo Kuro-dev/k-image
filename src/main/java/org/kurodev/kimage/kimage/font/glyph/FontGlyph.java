@@ -11,7 +11,10 @@ public interface FontGlyph {
      */
     Coordinate[][] getCoordinates();
 
-
+    int getXMin();
+    int getXMax();
+    int getYMin();
+    int getYMax();
 
     int getAdvanceWidth();
 
