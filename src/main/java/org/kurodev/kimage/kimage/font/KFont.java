@@ -5,7 +5,9 @@ import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.enums.HheaTable;
 import org.kurodev.kimage.kimage.font.enums.MaxpTable;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.FontStyle;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -69,4 +71,6 @@ public interface KFont {
     default int getTableValue(MaxpTable entry) {
         return getTableValue((FontTableEntry) entry);
     }
+
+    void drawString(Drawable drawable, int x, int y, int fontSizePx, Color color, String str, FontStyle... styles);
 }

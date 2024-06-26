@@ -1,12 +1,14 @@
 package org.kurodev.kimage.kimage.draw;
 
+import org.kurodev.kimage.kimage.font.Drawable;
 import org.kurodev.kimage.kimage.font.FontReaders;
 import org.kurodev.kimage.kimage.font.KFont;
+import org.kurodev.kimage.kimage.font.glyph.FontStyle;
 import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 
 import java.awt.*;
 
-public interface KImage {
+public interface KImage extends Drawable {
     static KImage empty(int width, int height) {
         return new DrawableImage(width, height);
     }
@@ -27,11 +29,11 @@ public interface KImage {
         return drawString(x, y, str, color, FontReaders.getDefaultFontReader(), fontSize);
     }
 
-    KImage drawString(int x, int y, String str, Color color, KFont font, int fontSize);
+    KImage drawString(int x, int y, String str, Color color, KFont font, int fontSize, FontStyle... styles);
 
     KImage drawPixel(int x, int y, Color color);
 
-    default KImage drawPixel(Coordinate point, Color color) {
+    default Drawable drawPixel(Coordinate point, Color color) {
         return drawPixel(point.x(), point.y(), color);
     }
 

@@ -1,14 +1,20 @@
 package org.kurodev.kimage.kimage.font;
 
+import org.kurodev.kimage.kimage.draw.KImage;
 import org.kurodev.kimage.kimage.font.enums.FontTableEntry;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.enums.HheaTable;
 import org.kurodev.kimage.kimage.font.enums.MaxpTable;
 import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
+import org.kurodev.kimage.kimage.font.glyph.FontStyle;
 import org.kurodev.kimage.kimage.font.glyph.GlyphFactory;
+import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
+import org.kurodev.kimage.kimage.util.ContourHorizontalIntersects;
+import org.kurodev.kimage.kimage.util.Transformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -21,7 +27,6 @@ import java.util.Optional;
 
 public class FontReader implements KFont {
     private static final Logger logger = LoggerFactory.getLogger(FontReader.class);
-
     private byte[] data;
     private int sfntVersion;
     private int numTables;
@@ -29,7 +34,6 @@ public class FontReader implements KFont {
     private int entrySelector;
     private int rangeShift;
     private TableEntry[] tableEntries;
-
 
     public void load(InputStream in) throws IOException {
         data = in.readAllBytes();
@@ -52,7 +56,7 @@ public class FontReader implements KFont {
             int length = dis.readInt();
             tableEntries[i] = new TableEntry(tag, checkSum, offset, length);
         }
-        logger.debug("tables: {}", numTables);
+        logger.debug("loading tables: {}", numTables);
         Arrays.stream(tableEntries).forEach(entry -> logger.trace("{}", entry));
     }
 
@@ -114,6 +118,7 @@ public class FontReader implements KFont {
         }
         return getGlyph(character.charAt(0));
     }
+
 
     @Override
     public int getLowestRecommendedPPEM() {
@@ -234,6 +239,58 @@ public class FontReader implements KFont {
             }
             default -> throw new RuntimeException("unsupported length");
         }
+    }
+
+    @Override
+    public void drawString(Drawable drawable, int x, int y, int fontSize, Color color, String str, FontStyle... styles) {
+        int lowestPPEM = this.getLowestRecommendedPPEM();
+        if (fontSize < lowestPPEM) {
+            logger.debug("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +
+                    " This may result in poor rendering quality.", fontSize, lowestPPEM);
+        }
+        if (fontSize % lowestPPEM != 0) {
+            int lowerRecommendation = ((int) Math.floor(((double) fontSize / lowestPPEM)) * lowestPPEM);
+            int higherRecommendation = ((int) Math.ceil(((double) fontSize / lowestPPEM)) * lowestPPEM);
+            logger.debug("fontsize is not a multiple of the lowest PPEM, and might look wrong. " +
+                    "Recommended alternative sizes to {}: {} or {}", fontSize, lowerRecommendation, higherRecommendation);
+            logger.debug("Enforcing fontsize: {}px", lowerRecommendation);
+            fontSize = lowerRecommendation;
+        }
+        int maxHeight = this.getTableValue(HeadTable.Y_MAX) - this.getTableValue(HeadTable.Y_MIN);
+        if (maxHeight == 0) {
+            logger.debug("Attempted to draw only whitespace characters");
+            return;
+        }
+        int originalX = x;
+        // Calculate the scale factor based on the target height
+        double scale = (double) fontSize / maxHeight;
+        for (int i = 0; i < str.length(); i++) {
+            char character = str.charAt(i);
+
+            if (character == '\n') {
+                y += (int) (maxHeight * scale);
+                x = originalX;
+                continue;
+            }
+            FontGlyph glyph = this.getGlyph(character);
+            drawGlyph(drawable, x, y, glyph, color, scale);
+            for (FontStyle style : styles) {
+                style.apply(x, y, scale, glyph, drawable, this, color);
+            }
+            int nextX = (int) Math.ceil(glyph.getAdvanceWidth() * scale);
+            x += nextX;
+        }
+    }
+
+    private void drawGlyph(Drawable drawable, int x, int y, FontGlyph glyph, Color color, double scale) {
+        Coordinate[][] glyphCoords = glyph.getCoordinates();
+        Coordinate[][] scaledCoords = Arrays.stream(glyphCoords).map(
+                contour -> Arrays.stream(contour).map(
+                        coord -> Transformation.SCALE.transform(coord, scale, scale)
+                ).toArray(Coordinate[]::new)
+        ).toArray(Coordinate[][]::new);
+        var intersectionSegments = ContourHorizontalIntersects.makeFromContour(scaledCoords);
+        intersectionSegments.drawPixels(drawable, x, y, color);
     }
 
     public record TableEntry(String tag, int checkSum, int offset, int length) {

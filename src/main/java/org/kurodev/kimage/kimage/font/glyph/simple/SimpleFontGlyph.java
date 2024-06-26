@@ -4,6 +4,11 @@ import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class SimpleFontGlyph implements FontGlyph {
     private static final Logger logger = LoggerFactory.getLogger(SimpleFontGlyph.class);
     /**
@@ -67,7 +72,7 @@ public class SimpleFontGlyph implements FontGlyph {
     @Override
     public int getYMin() {
         //this is necessary to ensure the glyph is drawn upright.
-        return yMax *-1;
+        return yMax * -1;
     }
 
     @Override
@@ -119,7 +124,6 @@ public class SimpleFontGlyph implements FontGlyph {
     public Coordinate[][] getCoordinates() {
         int currentX = 0;
         int currentY = 0;
-
         Coordinate[][] coordinates = new Coordinate[numberOfContours][];
 
         int pointIndex = 0;

@@ -248,4 +248,12 @@ public class Util {
         return py < xIntersection;
     }
 
+    public static List<Coordinate> calculateRectanglePoints(int x, int y, int dx, int dy) {
+        List<Coordinate> out = new ArrayList<>();
+        out.addAll(calculateLinePoints(x, y, x + dx, y));                       //horizontal top line
+        out.addAll(calculateLinePoints(x, y + dy, x + dx, y + dy));     //horizontal bottom line
+        out.addAll(calculateLinePoints(x, y, x, y + dy));                       //vertical left line
+        out.addAll(calculateLinePoints(x + dx, y, x + dx, y + dy + 1)); //vertical right line
+        return out;
+    }
 }

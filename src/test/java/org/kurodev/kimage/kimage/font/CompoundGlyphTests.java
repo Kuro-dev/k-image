@@ -1,11 +1,13 @@
 package org.kurodev.kimage.kimage.font;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.kurodev.kimage.kimage.draw.DrawableImage;
 import org.kurodev.kimage.kimage.draw.KImage;
+import org.kurodev.kimage.kimage.font.glyph.DebugFontStyles;
 import org.kurodev.kimage.kimage.font.glyph.compound.CompoundGlyph;
 import org.kurodev.kimage.kimage.font.glyph.compound.CompoundGlyphFlag;
 import org.kurodev.kimage.kimage.font.glyph.compound.GlyphWithFlags;
@@ -69,26 +71,5 @@ public class CompoundGlyphTests {
         assertEquals(compound2Flags, glyph.getComponents().get(1).flags().flags());
     }
 
-    @Test
-    public void simpleTest() throws IOException {
-        KImage img = new DrawableImage(100, 60);
-        img.fill(Color.WHITE);
-        String str = ".";
-        img.drawString(50, 55, str, Color.BLACK, font, 50);
-        Files.write(Path.of("./test.png"), img.encode());
-    }
 
-    @Test
-    public void drawString() throws IOException {
-        KImage img = new DrawableImage(1000, 300);
-        img.fill(Color.WHITE);
-        String str = """
-                ÄÖÜiiiIII
-                abcdefghijklmnopqrstuvwxyz
-                0123456789
-                $/+-*/"&@#<>
-                """;
-        img.drawString(10, 50, str, Color.BLACK, font, 50);
-        Files.write(Path.of("./test.png"), img.encode());
-    }
 }
