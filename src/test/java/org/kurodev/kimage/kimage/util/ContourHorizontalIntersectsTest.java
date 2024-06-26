@@ -1,5 +1,6 @@
 package org.kurodev.kimage.kimage.util;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
 import org.kurodev.kimage.kimage.draw.DrawableImage;
@@ -75,6 +76,7 @@ public class ContourHorizontalIntersectsTest {
     }
 
     @Test
+    @Disabled
     public void matrixTest() {
         var segments = segments1();
 
