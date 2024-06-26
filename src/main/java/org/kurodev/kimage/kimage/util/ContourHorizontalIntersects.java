@@ -174,21 +174,38 @@ public abstract class ContourHorizontalIntersects {
     }
 
     static Stream<HorizontalSegment> horizontalIntersects(List<Segment> segments) {
+        return Stream.concat(
+                horizontalBoundaryIntersects(segments),
+                horizontalInnerIntersects(segments)
+        );
+    }
+
+    static Stream<HorizontalSegment> horizontalBoundaryIntersects(List<Segment> segments) {
+        return slices(segments).flatMap(slice -> {
+            return IntStream.of(slice.lowY, slice.highY).boxed().<HorizontalSegment> mapMulti((y, c) -> {
+                for(var segment: segments) {
+                    if(segment.a().y() == y && segment.b().y() == y) {
+                        var xStart = min(segment.a().x(), segment.b().x());
+                        var xEnd = max(segment.a().x(), segment.b().x());
+                        c.accept(new HorizontalSegment(xStart, xEnd, y));
+                    }
+                }
+            });
+        }).distinct();
+    }
+
+    static Stream<HorizontalSegment> horizontalInnerIntersects(List<Segment> segments) {
         return slices(segments).flatMap(slice -> {
             var crossingSegments = crossingSegments(slice, segments);
-            return IntStream.range(slice.lowY, slice.highY).boxed().flatMap(y -> {
-                double effectiveY = y;
-                if (y == slice.lowY || y == slice.highY) {
-                    /* TODO: This is a workaround. There should be a way to do better. */
-                    effectiveY += (y == slice.lowY ? 1 : -1) * 0.001;
-                }
+            return IntStream.rangeClosed(slice.lowY, slice.highY).boxed().flatMap(y -> {
+                var effectiveY = y == slice.lowY ? (y + 0.001) : (y == slice.highY) ? (y - 0.001) : y;
                 var xs = horizontalIntersections(effectiveY, crossingSegments);
 
                 return IntStream.range(0, xs.length / 2).mapToObj(
                         i -> new HorizontalSegment(xs[2*i], xs[2*i+1], y)
                 );
             });
-        });
+        }).distinct();
     }
 
     static boolean[][] touchMatrix(List<HorizontalSegment> segments) {
