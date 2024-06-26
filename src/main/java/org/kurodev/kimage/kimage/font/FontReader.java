@@ -1,6 +1,5 @@
 package org.kurodev.kimage.kimage.font;
 
-import org.kurodev.kimage.kimage.draw.KImage;
 import org.kurodev.kimage.kimage.font.enums.FontTableEntry;
 import org.kurodev.kimage.kimage.font.enums.HeadTable;
 import org.kurodev.kimage.kimage.font.enums.HheaTable;
@@ -9,6 +8,7 @@ import org.kurodev.kimage.kimage.font.glyph.FontGlyph;
 import org.kurodev.kimage.kimage.font.glyph.FontStyle;
 import org.kurodev.kimage.kimage.font.glyph.GlyphFactory;
 import org.kurodev.kimage.kimage.font.glyph.simple.Coordinate;
+import org.kurodev.kimage.kimage.font.table.CmapTable;
 import org.kurodev.kimage.kimage.util.ContourHorizontalIntersects;
 import org.kurodev.kimage.kimage.util.Transformation;
 import org.slf4j.Logger;
@@ -22,7 +22,9 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class FontReader implements KFont {
@@ -91,7 +93,7 @@ public class FontReader implements KFont {
      * @see HheaTable
      * @see MaxpTable
      */
-    ByteBuffer getTableDataUnsafe(String tag) {
+    private ByteBuffer getTableDataUnsafe(String tag) {
         var optional = getTableEntry(tag);
         if (optional.isPresent()) {
             var entry = optional.get();
@@ -108,15 +110,17 @@ public class FontReader implements KFont {
      * <a href="https://developer.apple.com/fonts/TrueType-Reference-Manual/RM07/appendixB.html">Documentation</a>
      */
     public int getGlyphIndex(char character) {
-        return CmapTable.fromFontReader(this).getGlyphIndex(character);
+        return new CmapTable(getTableDataUnsafe("cmap")).getGlyphIndex(character);
     }
 
-
-    public FontGlyph getGlyph(String character) {
-        if (character.length() != 1) {
-            throw new IllegalArgumentException("Can only identify one glyph at the time");
+    @Override
+    public List<FontGlyph> getGlyphs(String str) {
+        List<FontGlyph> glyphs = new ArrayList<>(str.length());
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            glyphs.add(getGlyph(c));
         }
-        return getGlyph(character.charAt(0));
+        return glyphs;
     }
 
 
@@ -127,7 +131,7 @@ public class FontReader implements KFont {
 
     public FontGlyph getGlyph(char character) {
         long start = System.currentTimeMillis();
-        CmapTable cmapTable = CmapTable.fromFontReader(this);
+        CmapTable cmapTable = new CmapTable(getTableDataUnsafe("cmap"));
         int glyphIndex = cmapTable.getGlyphIndex(character);
         ByteBuffer glyf = getTableDataUnsafe("glyf");
         ByteBuffer loca = getTableDataUnsafe("loca");
@@ -152,7 +156,7 @@ public class FontReader implements KFont {
     @Override
     public FontGlyph getGlyph(int glyphIndex) {
         long start = System.currentTimeMillis();
-        CmapTable cmap = CmapTable.fromFontReader(this);
+        CmapTable cmap = new CmapTable(getTableDataUnsafe("cmap"));
         ByteBuffer glyf = getTableDataUnsafe("glyf");
         ByteBuffer loca = getTableDataUnsafe("loca");
         char character = cmap.getCharacter(glyphIndex).orElse(' ');
@@ -295,4 +299,5 @@ public class FontReader implements KFont {
 
     public record TableEntry(String tag, int checkSum, int offset, int length) {
     }
+
 }

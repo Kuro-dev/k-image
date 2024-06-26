@@ -10,6 +10,7 @@ import org.kurodev.kimage.kimage.font.glyph.FontStyle;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public interface KFont {
 
@@ -71,6 +72,8 @@ public interface KFont {
     default int getTableValue(MaxpTable entry) {
         return getTableValue((FontTableEntry) entry);
     }
+
+    List<FontGlyph> getGlyphs(String str);
 
     void drawString(Drawable drawable, int x, int y, int fontSizePx, Color color, String str, FontStyle... styles);
 }

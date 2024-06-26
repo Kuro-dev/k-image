@@ -41,6 +41,9 @@ public class SwingView extends Canvas {
         frame.setContentPane(panel);
         initialize();
         frame.setVisible(true);
+        textArea.setText("The Quick Brown fox jumps over\nthe lazy dog\n");
+        textArea.setCaretPosition(textArea.getText().length());
+        canvas.repaint();
         textArea.grabFocus();
     }
 
