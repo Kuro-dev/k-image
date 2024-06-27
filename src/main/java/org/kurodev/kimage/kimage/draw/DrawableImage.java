@@ -232,7 +232,7 @@ public class DrawableImage implements KImage {
 
     @Override
     public DrawableImage drawPixel(int x, int y, Color color) {
-        if(color.getAlpha() != 0) {
+        if(color.getAlpha() != 255) {
             int[] rgb = png.readColor(x, y);
             color = combineOpaque(color, new Color(rgb[0], rgb[1], rgb[2]));
         } else {
@@ -355,8 +355,8 @@ public class DrawableImage implements KImage {
         return this;
     }
 
-    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, int fontSize, FontStyle... styles) {
-        font.drawString(this, x, y, fontSize, color, str, styles);
+    public DrawableImage drawString(int x, int y, String str, Color color, KFont font, int fontSize, boolean antiAliasing, FontStyle... styles) {
+        font.drawString(this, x, y, fontSize, color, str, antiAliasing, styles);
         return this;
     }
 

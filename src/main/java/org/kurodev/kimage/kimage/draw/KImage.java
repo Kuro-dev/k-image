@@ -29,7 +29,11 @@ public interface KImage extends Drawable {
         return drawString(x, y, str, color, FontReaders.getDefaultFontReader(), fontSize);
     }
 
-    KImage drawString(int x, int y, String str, Color color, KFont font, int fontSize, FontStyle... styles);
+    default KImage drawString(int x, int y, String str, Color color, KFont font, int fontSize, FontStyle... styles) {
+        return drawString(x, y, str, color, font, fontSize, true, styles);
+    }
+
+    KImage drawString(int x, int y, String str, Color color, KFont font, int fontSize, boolean antiAliasing, FontStyle... styles);
 
     KImage drawPixel(int x, int y, Color color);
 

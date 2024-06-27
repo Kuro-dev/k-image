@@ -75,5 +75,5 @@ public interface KFont {
 
     List<FontGlyph> getGlyphs(String str);
 
-    void drawString(Drawable drawable, int x, int y, int fontSizePx, Color color, String str, FontStyle... styles);
+    void drawString(Drawable drawable, int x, int y, int fontSizePx, Color color, String str, boolean antiAliasing, FontStyle... styles);
 }

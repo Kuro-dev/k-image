@@ -15,7 +15,7 @@ import static java.lang.Math.max;
 import static java.util.Collections.unmodifiableList;
 
 public abstract class ContourHorizontalIntersects {
-    abstract public void drawPixels(Drawable image, int x, int y, Color color);
+    abstract public void drawPixels(Drawable image, int x, int y, Color color, boolean antiAliasing);
 
 
     record Slice(int lowY, int highY) {
@@ -214,20 +214,32 @@ public abstract class ContourHorizontalIntersects {
             }
 
             @Override
-            public void drawPixels(Drawable image, int x, int y, Color color) {
-                this.workingColor = color;
-                var cache = new HashMap<Float, Color>();
+            public void drawPixels(Drawable image, int x, int y, Color color, boolean antiAliasing) {
+                if(antiAliasing) {
+                    this.workingColor = color;
+                    var cache = new HashMap<Float, Color>();
 
-                for(int j = 0; j < matrix.length; j++) {
-                    for(int i = 0; i < matrix[j].length; i++) {
-                        float score = 128 * getEntryAsFloat(j, i) + 127 * (
-                                getEntryAsFloat(j-1, i-1) + getEntryAsFloat(j, i-1) + getEntryAsFloat(j+1,i+1)
-                                + getEntryAsFloat(j-1, i) + getEntryAsFloat(j+1, i)
-                                + getEntryAsFloat(j-1, i+1) + getEntryAsFloat(j, i+1) + getEntryAsFloat(j+1, i+1)
-                        ) / 8.0f;
-                        var effectiveColor = cache.computeIfAbsent(score, this::getColorOfScore);
+                    for (int j = 0; j < matrix.length; j++) {
+                        for (int i = 0; i < matrix[j].length; i++) {
+                            float score = 128 * getEntryAsFloat(j, i) + 127 * (
+                                    getEntryAsFloat(j - 1, i - 1) + getEntryAsFloat(j, i - 1) + getEntryAsFloat(j + 1, i + 1)
+                                            + getEntryAsFloat(j - 1, i) + getEntryAsFloat(j + 1, i)
+                                            + getEntryAsFloat(j - 1, i + 1) + getEntryAsFloat(j, i + 1) + getEntryAsFloat(j + 1, i + 1)
+                            ) / 8.0f;
+                            if(score > 1.0f) {
+                                var effectiveColor = cache.computeIfAbsent(score, this::getColorOfScore);
 
-                        image.drawPixel(i + xMin + x, j + yMin + y, effectiveColor);
+                                image.drawPixel(i + xMin + x, j + yMin + y, effectiveColor);
+                            }
+                        }
+                    }
+                } else {
+                    for (int j = 0; j < matrix.length; j++) {
+                        for (int i = 0; i < matrix[j].length; i++) {
+                            if(matrix[j][i]) {
+                                image.drawPixel(i + xMin + x, j + yMin + y, color);
+                            }
+                        }
                     }
                 }
             }
@@ -240,7 +252,7 @@ public abstract class ContourHorizontalIntersects {
         if (contours == null || contours.length == 0) {
             return new ContourHorizontalIntersects() {
                 @Override
-                public void drawPixels(Drawable image, int x, int y, Color color) {
+                public void drawPixels(Drawable image, int x, int y, Color color, boolean antiAliasing) {
                 }
             };
         } else {
@@ -248,11 +260,8 @@ public abstract class ContourHorizontalIntersects {
             var matrix = touchMatrix(segments);
             return new ContourHorizontalIntersects() {
                 @Override
-                public void drawPixels(Drawable image, int x, int y, Color color) {
-                    for (var segment : segments) {
-                        segment.drawPixels(image, x, y, Color.RED);
-                    }
-                    matrix.drawPixels(image, x, y, color);
+                public void drawPixels(Drawable image, int x, int y, Color color, boolean antiAliasing) {
+                    matrix.drawPixels(image, x, y, color, antiAliasing);
                 }
             };
         }

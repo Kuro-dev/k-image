@@ -246,7 +246,7 @@ public class FontReader implements KFont {
     }
 
     @Override
-    public void drawString(Drawable drawable, int x, int y, int fontSize, Color color, String str, FontStyle... styles) {
+    public void drawString(Drawable drawable, int x, int y, int fontSize, Color color, String str, boolean antiAliasing, FontStyle... styles) {
         int lowestPPEM = this.getLowestRecommendedPPEM();
         if (fontSize < lowestPPEM) {
             logger.debug("Provided fontSize {} pixels is less than the lowest recommended height {} pixels." +
@@ -277,7 +277,7 @@ public class FontReader implements KFont {
                 continue;
             }
             FontGlyph glyph = this.getGlyph(character);
-            drawGlyph(drawable, x, y, glyph, color, scale);
+            drawGlyph(drawable, x, y, glyph, color, scale, antiAliasing);
             for (FontStyle style : styles) {
                 style.apply(x, y, scale, glyph, drawable, this, color);
             }
@@ -286,7 +286,7 @@ public class FontReader implements KFont {
         }
     }
 
-    private void drawGlyph(Drawable drawable, int x, int y, FontGlyph glyph, Color color, double scale) {
+    private void drawGlyph(Drawable drawable, int x, int y, FontGlyph glyph, Color color, double scale, boolean antiAliasing) {
         Coordinate[][] glyphCoords = glyph.getCoordinates();
         Coordinate[][] scaledCoords = Arrays.stream(glyphCoords).map(
                 contour -> Arrays.stream(contour).map(
@@ -294,7 +294,7 @@ public class FontReader implements KFont {
                 ).toArray(Coordinate[]::new)
         ).toArray(Coordinate[][]::new);
         var intersectionSegments = ContourHorizontalIntersects.makeFromContour(scaledCoords);
-        intersectionSegments.drawPixels(drawable, x, y, color);
+        intersectionSegments.drawPixels(drawable, x, y, color, antiAliasing);
     }
 
     public record TableEntry(String tag, int checkSum, int offset, int length) {

@@ -102,6 +102,6 @@ public class SwingView extends Canvas {
             g.drawRect(x, y, 1, 1);
             return null;
         };
-        font.drawString(d, 10, 55, 50, Color.BLACK, textArea.getText());
+        font.drawString(d, 10, 55, 50, Color.BLACK, textArea.getText(), true);
     }
 }
