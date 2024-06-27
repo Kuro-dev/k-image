@@ -126,42 +126,41 @@ public abstract class ContourHorizontalIntersects {
         return unmodifiableList(segments);
     }
 
-    static Stream<HorizontalSegment> horizontalIntersects(List<Segment> segments) {
-        return Stream.concat(
-                horizontalBoundaryIntersects(segments),
-                horizontalInnerIntersects(segments)
+    static Stream<HorizontalSegment> horizontalBoundaryIntersects(int y, List<Segment> segments) {
+        return segments.stream().filter(
+                segment -> segment.a().y() == y && segment.b().y() == y
+        ).map(
+                segment -> {
+                    var xStart = min(segment.a().x(), segment.b().x());
+                    var xEnd = max(segment.a().x(), segment.b().x());
+                    return new HorizontalSegment(xStart, xEnd, y);
+                }
         );
     }
 
-    static Stream<HorizontalSegment> horizontalBoundaryIntersects(List<Segment> segments) {
-        return slices(segments).flatMap(slice -> {
-            return IntStream.of(slice.lowY, slice.highY).boxed().<HorizontalSegment> mapMulti((y, c) -> {
-                for(var segment: segments) {
-                    if(segment.a().y() == y && segment.b().y() == y) {
-                        var xStart = min(segment.a().x(), segment.b().x());
-                        var xEnd = max(segment.a().x(), segment.b().x());
-                        c.accept(new HorizontalSegment(xStart, xEnd, y));
-                    }
-                }
-            });
-        }).distinct();
-    }
-
-    static Stream<HorizontalSegment> horizontalInnerIntersects(List<Segment> segments) {
+    static Stream<HorizontalSegment> horizontalIntersects(List<Segment> segments) {
         return slices(segments).flatMap(slice -> {
             var crossingSegments = crossingSegments(slice, segments);
             return IntStream.rangeClosed(slice.lowY, slice.highY).boxed().flatMap(y -> {
                 var effectiveY = y == slice.lowY ? (y + 0.001) : (y == slice.highY) ? (y - 0.001) : y;
                 var xs = horizontalIntersections(effectiveY, crossingSegments);
 
-                return IntStream.range(0, xs.length / 2).mapToObj(
+                var base = IntStream.range(0, xs.length / 2).mapToObj(
                         i -> new HorizontalSegment(xs[2 * i], xs[2 * i + 1], y)
                 );
+                if(y == slice.lowY || y == slice.highY) {
+                    return Stream.concat(
+                            base,
+                            horizontalBoundaryIntersects(y, segments)
+                    );
+                } else {
+                    return base;
+                }
             });
-        }).distinct();
+        });
     }
 
-    static boolean[][] touchMatrix(List<HorizontalSegment> segments) {
+    static ContourHorizontalIntersects touchMatrix(List<HorizontalSegment> segments) {
         final int yMin, yMax, xMin, xMax;
         {
             int minY = Integer.MAX_VALUE,
@@ -186,13 +185,53 @@ public abstract class ContourHorizontalIntersects {
 
         for(var segment: segments) {
             var j = segment.y() - yMin;
-            for(var i = 0; i < matrix[0].length; i++) {
-                var k = i + segment.xStart() - xMin;
-                matrix[j][k] = true;
+            for(var x = segment.xStart; x <= segment.xEnd; x++) {
+                var i = x - xMin;
+                matrix[j][i] = true;
             }
         }
 
-        return matrix;
+        return new ContourHorizontalIntersects() {
+            Color workingColor;
+
+            float getEntryAsFloat(int j, int i) {
+                return j >= 0
+                        && j < matrix.length
+                        && i >= 0
+                        && i < matrix[j].length
+                        && matrix[j][i]
+                        ? 1.0f : 0.0f;
+            }
+
+            Color getColorOfScore(float score) {
+                int alpha = 255-min(255, max(0, Math.round(score)));
+                return new Color(
+                        workingColor.getRed(),
+                        workingColor.getGreen(),
+                        workingColor.getBlue(),
+                        alpha
+                );
+            }
+
+            @Override
+            public void drawPixels(Drawable image, int x, int y, Color color) {
+                this.workingColor = color;
+                var cache = new HashMap<Float, Color>();
+
+                for(int j = 0; j < matrix.length; j++) {
+                    for(int i = 0; i < matrix[j].length; i++) {
+                        float score = 128 * getEntryAsFloat(j, i) + 127 * (
+                                getEntryAsFloat(j-1, i-1) + getEntryAsFloat(j, i-1) + getEntryAsFloat(j+1,i+1)
+                                + getEntryAsFloat(j-1, i) + getEntryAsFloat(j+1, i)
+                                + getEntryAsFloat(j-1, i+1) + getEntryAsFloat(j, i+1) + getEntryAsFloat(j+1, i+1)
+                        ) / 8.0f;
+                        var effectiveColor = cache.computeIfAbsent(score, this::getColorOfScore);
+
+                        image.drawPixel(i + xMin + x, j + yMin + y, effectiveColor);
+                    }
+                }
+            }
+        };
     }
 
     /* Public API */
@@ -206,13 +245,14 @@ public abstract class ContourHorizontalIntersects {
             };
         } else {
             var segments = horizontalIntersects(segmentsOfContours(contours)).toList();
-            //var matrix = touchMatrix(segments);
+            var matrix = touchMatrix(segments);
             return new ContourHorizontalIntersects() {
                 @Override
                 public void drawPixels(Drawable image, int x, int y, Color color) {
                     for (var segment : segments) {
-                        segment.drawPixels(image, x, y, color);
+                        segment.drawPixels(image, x, y, Color.RED);
                     }
+                    matrix.drawPixels(image, x, y, color);
                 }
             };
         }

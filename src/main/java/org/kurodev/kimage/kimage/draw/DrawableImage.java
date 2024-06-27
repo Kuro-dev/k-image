@@ -21,6 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 
+import static java.lang.Math.*;
+
 public class DrawableImage implements KImage {
     private static final Logger logger = LoggerFactory.getLogger(DrawableImage.class);
     private final Map<String, byte[]> customChunks;
@@ -85,10 +87,10 @@ public class DrawableImage implements KImage {
     }
 
     public DrawableImage fillRect(Coordinate corner1, Coordinate corner2, Coordinate corner3, Coordinate corner4, Color color) {
-        int minX = Math.min(Math.min(corner1.x(), corner2.x()), Math.min(corner3.x(), corner4.x()));
-        int minY = Math.min(Math.min(corner1.y(), corner2.y()), Math.min(corner3.y(), corner4.y()));
-        int maxX = Math.max(Math.max(corner1.x(), corner2.x()), Math.max(corner3.x(), corner4.x()));
-        int maxY = Math.max(Math.max(corner1.y(), corner2.y()), Math.max(corner3.y(), corner4.y()));
+        int minX = min(min(corner1.x(), corner2.x()), min(corner3.x(), corner4.x()));
+        int minY = min(min(corner1.y(), corner2.y()), min(corner3.y(), corner4.y()));
+        int maxX = max(max(corner1.x(), corner2.x()), max(corner3.x(), corner4.x()));
+        int maxY = max(max(corner1.y(), corner2.y()), max(corner3.y(), corner4.y()));
 
         return fillRect(minX, minY, maxX - minX, maxY - minY, color);
     }
@@ -135,8 +137,8 @@ public class DrawableImage implements KImage {
     public DrawableImage drawCircle(int centerX, int centerY, int radius, Color color) {
         double angleIncrement = 1.0 / radius;
         for (double angle = 0; angle < 2 * Math.PI; angle += angleIncrement) {
-            int x = (int) Math.round(centerX + radius * Math.cos(angle));
-            int y = (int) Math.round(centerY + radius * Math.sin(angle));
+            int x = (int) round(centerX + radius * Math.cos(angle));
+            int y = (int) round(centerY + radius * Math.sin(angle));
             if (isOOB(x, y)) {
                 continue;
             }
@@ -211,8 +213,31 @@ public class DrawableImage implements KImage {
         return this;
     }
 
+    static int roundColorComponent(float x) {
+        return min(255, max(0, round(x)));
+    }
+
+    static float convexCombination(float start, float end, float t) {
+        return start + t*(end - start);
+    }
+
+    static Color combineOpaque(Color newWithOpacity, Color oldOpaque) {
+        var a = (255 - newWithOpacity.getAlpha())/255.0f;
+        return new Color(
+                roundColorComponent(convexCombination(oldOpaque.getRed(), newWithOpacity.getRed(), a)),
+                roundColorComponent(convexCombination(oldOpaque.getGreen(), newWithOpacity.getGreen(), a)),
+                roundColorComponent(convexCombination(oldOpaque.getBlue(), newWithOpacity.getBlue(), a))
+        );
+    }
+
     @Override
     public DrawableImage drawPixel(int x, int y, Color color) {
+        if(color.getAlpha() != 0) {
+            int[] rgb = png.readColor(x, y);
+            color = combineOpaque(color, new Color(rgb[0], rgb[1], rgb[2]));
+        } else {
+            color = new Color(color.getRed(), color.getGreen(), color.getBlue());
+        }
         png.writeColor(x, y, color);
         return this;
     }

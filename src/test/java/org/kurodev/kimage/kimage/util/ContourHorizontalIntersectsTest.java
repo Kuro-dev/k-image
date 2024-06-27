@@ -88,11 +88,11 @@ public class ContourHorizontalIntersectsTest {
 
     @Test
     public void simpleTest() throws IOException {
-        KImage img = new DrawableImage(100, 60);
+        KImage img = new DrawableImage(400, 200);
         img.fill(Color.WHITE);
-        String str = ".";
+        String str = "Hello World,\nHow is life today?";
         var font = KFont.getFont(Files.newInputStream(Path.of("./testfonts/JetBrainsMono-Regular.ttf")));
-        img.drawString(50, 55, str, Color.BLACK, font, 50);
+        img.drawString(30, 40, str, Color.BLACK, font, 50);
         Files.write(Path.of("./test.png"), img.encode());
     }
 }
