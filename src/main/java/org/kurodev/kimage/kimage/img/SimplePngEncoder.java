@@ -40,7 +40,7 @@ public class SimplePngEncoder {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         // Write PNG signature
-        baos.write(new byte[]{(byte) 137, (byte) 80, (byte) 78, (byte) 71, (byte) 13, (byte) 10, (byte) 26, (byte) 10});
+        baos.write(new byte[]{(byte) 0x89, 'P', 'N', 'G', (byte) 0xd, (byte) 0xa, (byte) 0x1a, (byte) 0xa});
 
         // Write IHDR chunk
         ByteBuffer ihdr = ByteBuffer.allocate(13);
