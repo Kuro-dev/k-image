@@ -8,7 +8,7 @@ Short answer: edit images while only relying on RAM, and not writing to the disk
 - [x] Draw Lines
 - [x] Draw Rectangles (filled and hollow)
 - [x] Draw Circles (filled and hollow)
-- [ ] Draw Text
+- [x] Draw Text
 
 # Current goals:
 
