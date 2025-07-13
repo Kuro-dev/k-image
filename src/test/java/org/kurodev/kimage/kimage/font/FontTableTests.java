@@ -27,7 +27,7 @@ public class FontTableTests {
         assertEquals(0x0001_0000, HeadTable.VERSION);
         assertEquals(0x0001_0000, HeadTable.FONT_REVISION);
         assertEquals(Integer.parseUnsignedInt("2240484246"), HeadTable.CHECKSUM_ADJUSTMENT);
-        assertEquals(1594834165, HeadTable.MAGIC_NUMBER);
+        assertEquals(0x5f0f3cf5, HeadTable.MAGIC_NUMBER);
         assertEquals(11, HeadTable.FLAGS);
         assertEquals(1024, HeadTable.UNITS_PER_EM);
         assertEquals(0, HeadTable.X_MIN);

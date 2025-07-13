@@ -94,7 +94,6 @@ public class SwingView extends Canvas {
     public static void main(String[] args) throws Exception {
         loadFont();
         createAndShowGUI();
-
     }
 
     private static void loadFont() throws IOException {

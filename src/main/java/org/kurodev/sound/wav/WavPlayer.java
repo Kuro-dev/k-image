@@ -21,9 +21,8 @@ public class WavPlayer {
 
     @SneakyThrows
     public WavPlayer(Track track) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        track.encode(baos);
-        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new BufferedInputStream(new ByteArrayInputStream(baos.toByteArray())));
+        //encoding to .WAV format
+        AudioInputStream audioInputStream = AudioUtil.ensurePlayable(track);
         this.clip = AudioSystem.getClip();
         clip.open(audioInputStream);
     }

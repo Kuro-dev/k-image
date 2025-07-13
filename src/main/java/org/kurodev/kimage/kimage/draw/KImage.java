@@ -40,7 +40,8 @@ public interface KImage extends Drawable {
     KImage drawLine(int x1, int y1, int x2, int y2, Color color);
 
     default KImage drawLine(int x1, int y1, int x2, int y2, Color color, int thickness) {
-        for (int i = 0; i < thickness; i++) {
+        drawLine(x1, y1, x2, y2, color);
+        for (int i = 1; i < thickness; i++) {
             drawLine(x1 + i, y1, x2 + i, y2, color);
             drawLine(x1, y1 + i, x2, y2 + i, color);
         }

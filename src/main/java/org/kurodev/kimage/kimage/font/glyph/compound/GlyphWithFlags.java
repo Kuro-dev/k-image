@@ -2,7 +2,6 @@ package org.kurodev.kimage.kimage.font.glyph.compound;
 
 import org.kurodev.kimage.kimage.font.glyph.simple.SimpleFontGlyph;
 
-import java.util.List;
 import java.util.Objects;
 
 public final class GlyphWithFlags {

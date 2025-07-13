@@ -262,12 +262,20 @@ public class FontReader implements KFont {
         }
         int maxHeight = this.getTableValue(HeadTable.Y_MAX) - this.getTableValue(HeadTable.Y_MIN);
         if (maxHeight == 0) {
-            logger.debug("Attempted to draw only whitespace characters");
+            return;
+        }
+        // Calculate the scale factor based on the target height
+        double scale = (double) fontSize / maxHeight;
+        drawString(drawable, x, y, scale, color, str, styles);
+    }
+
+    @Override
+    public void drawString(Drawable drawable, int x, int y, double scale, Color color, String str, FontStyle... styles) {
+        int maxHeight = this.getTableValue(HeadTable.Y_MAX) - this.getTableValue(HeadTable.Y_MIN);
+        if (maxHeight == 0) {
             return;
         }
         int originalX = x;
-        // Calculate the scale factor based on the target height
-        double scale = (double) fontSize / maxHeight;
         for (int i = 0; i < str.length(); i++) {
             char character = str.charAt(i);
 
