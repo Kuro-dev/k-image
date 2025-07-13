@@ -19,6 +19,8 @@ import java.nio.file.Path;
  * Includes a font loading functionality
  */
 public class SwingView extends Canvas {
+    private static final JSlider fontSize = new JSlider(JSlider.HORIZONTAL, 20, 100, 50);
+
     private static final JFrame frame = new JFrame();
     private static final JTextArea textArea = new JTextArea();
     private static final Canvas canvas = new SwingView();
@@ -31,23 +33,36 @@ public class SwingView extends Canvas {
         frame.setLocationRelativeTo(null);
         JPanel panel = new JPanel(new BorderLayout());
         JPanel toolbarPanel = new JPanel(new BorderLayout());
-        JToolBar toolBar = createToolbar();
-        toolbarPanel.add(toolBar, BorderLayout.NORTH);
-        toolbarPanel.add(new JLabel("Text:"), BorderLayout.WEST);
+        JToolBar toolBar = new JToolBar();
+        toolbarPanel.add(createFileChooser(), BorderLayout.NORTH);
+        toolbarPanel.add(toolBar, BorderLayout.SOUTH);
+        toolBar.add(new JLabel("Text:"));
         textArea.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        toolbarPanel.add(textArea, BorderLayout.CENTER);
         panel.add(new JScrollPane(canvas), BorderLayout.CENTER);
         panel.add(toolbarPanel, BorderLayout.NORTH);
         frame.setContentPane(panel);
+        toolBar.add(createSlider());
+        toolBar.add(textArea);
         initialize();
-        frame.setVisible(true);
-        textArea.setText("The Quick Brown fox jumps over\nthe lazy dog\n");
-        textArea.setCaretPosition(textArea.getText().length());
-        canvas.repaint();
-        textArea.grabFocus();
     }
 
-    private static JToolBar createToolbar() {
+    private static JPanel createSlider() {
+        JPanel panel = new JPanel(new BorderLayout(2, 5));
+        JLabel label = new JLabel();
+        panel.add(label, BorderLayout.NORTH);
+        panel.add(fontSize, BorderLayout.SOUTH);
+        panel.setSize(60, 20);
+        fontSize.addChangeListener(e -> setLabelText(label, fontSize));
+        setLabelText(label, fontSize);
+        return panel;
+    }
+
+    private static void setLabelText(JLabel label, JSlider slider) {
+        label.setText("Font size: " + slider.getValue() + "px");
+        canvas.repaint();
+    }
+
+    private static JToolBar createFileChooser() {
         JToolBar toolBar = new JToolBar();
         JFileChooser fileChooser = new JFileChooser(Path.of("./testfonts").toFile());
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -93,6 +108,11 @@ public class SwingView extends Canvas {
                 canvas.repaint();
             }
         });
+        frame.setVisible(true);
+        textArea.setText("The Quick Brown fox jumps over\nthe lazy dog\n");
+        textArea.setCaretPosition(textArea.getText().length());
+        canvas.repaint();
+        textArea.grabFocus();
     }
 
     @Override
@@ -102,6 +122,6 @@ public class SwingView extends Canvas {
             g.drawRect(x, y, 1, 1);
             return null;
         };
-        font.drawString(d, 10, 55, 50, Color.BLACK, textArea.getText());
+        font.drawString(d, 10, fontSize.getValue() + 5, fontSize.getValue(), Color.BLACK, textArea.getText());
     }
 }

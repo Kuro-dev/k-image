@@ -44,7 +44,7 @@ public class CompoundGlyphTests {
     }
 
     @Test
-    public void testCompoundGlyphFlags() throws IOException {
+    public void testCompoundGlyphFlags() {
         CompoundGlyph glyph = (CompoundGlyph) font.getGlyph('Ä');
 
         assertEquals(600, glyph.getAdvanceWidth());
