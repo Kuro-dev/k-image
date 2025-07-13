@@ -74,10 +74,13 @@ public final class WavDecoder {
 
         //[Chunk containing the sampled data]
         String dataBlocId = new String(wav.readNBytes(4));
-        if (!"data".equals(dataBlocId)) {
-            throw new WavFormatException("Invalid dataBlocId");
-        }
         int dataSize = readInt(4, wav);
+        while (!"data".equals(dataBlocId)) {
+            wav.skip(dataSize);
+            dataBlocId = new String(wav.readNBytes(4));
+        }
+
+
         double[][] data = new double[numberOfChannels][];
         int bytesPerSample = bitsPerSample / 8;
         int channelSize = dataSize / (bytePerBloc * numberOfChannels);

@@ -1,23 +1,22 @@
 package org.kurodev.sound;
 
 import org.junit.jupiter.api.Test;
-import org.kurodev.sound.wav.SineWaveGenerator;
 import org.kurodev.sound.wav.Track;
 import org.kurodev.sound.wav.WavPlayer;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class WavTest {
     private static final Path TEST_FILE_MONO = Path.of("./testWAVs/whiteNoiseMono.wav");
     private static final Path TEST_FILE_STEREO = Path.of("./testWAVs/whiteNoiseStereo.wav");
+    private static final Path TEST_FILE_POP = Path.of("./testWAVs/japan-city-pop.wav");
 
     @Test
-    public void test1() {
-        SineWaveGenerator generator = SineWaveGenerator.of(SineWaveGenerator.FrequencyMode.ADDITIVE, 1000)
-                .addFrequency(100);
-        Track t = Track.ofSineWave(5, generator);
+    public void test1() throws Exception {
+        Track t = Track.of(Files.newInputStream(TEST_FILE_POP));
         WavPlayer player = new WavPlayer(t);
+        t.encode(Path.of("./pop.wav"));
         player.playAndWait();
-
     }
 }
