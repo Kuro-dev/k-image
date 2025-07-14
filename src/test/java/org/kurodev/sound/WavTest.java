@@ -1,10 +1,9 @@
 package org.kurodev.sound;
 
 import org.junit.jupiter.api.Test;
+import org.kurodev.sound.math.FFT;
 import org.kurodev.sound.wav.Track;
-import org.kurodev.sound.wav.WavPlayer;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class WavTest {
@@ -14,8 +13,8 @@ public class WavTest {
 
     @Test
     public void test1() throws Exception {
-        Track t = Track.of(Files.newInputStream(TEST_FILE_POP));
-        WavPlayer player = new WavPlayer(t);
-        player.playAndWait();
+        Track track = Track.ofSineWave(1, 1000);
+        FFT.Result[] results = FFT.findFrequencies(track.getData()[0], 44100);
+        System.out.println(FFT.findLoudestFrequency(results));
     }
 }
