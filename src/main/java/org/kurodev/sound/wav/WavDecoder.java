@@ -1,12 +1,13 @@
 package org.kurodev.sound.wav;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
+@Slf4j
 public final class WavDecoder {
     private WavDecoder() {
         throw new IllegalStateException("Factory class cannot be instantiated");
@@ -47,6 +48,8 @@ public final class WavDecoder {
     }
 
     public static Track decode(InputStream wav) throws IOException {
+        wav = new BufferedInputStream(wav, 1024);
+
         //[Master RIFF chunk]
         String blocId = new String(wav.readNBytes(4));
         if (!"RIFF".equals(blocId)) {
@@ -64,7 +67,11 @@ public final class WavDecoder {
             throw new WavFormatException("Invalid formatBlocId");
         }
         int blocSize = readInt(4, wav);
-        int audioFormat = readInt(2, wav);
+        int audioFormat = readInt(2, wav); //Audio format (1: PCM integer, 3: IEEE 754 float)
+
+        if (audioFormat != 1) {
+            throw new UnsupportedEncodingException("float encoding not supported yet");
+        }
 
         int numberOfChannels = readInt(2, wav);
         int sampleRate = readInt(4, wav);
@@ -75,15 +82,16 @@ public final class WavDecoder {
         //[Chunk containing the sampled data]
         String dataBlocId = new String(wav.readNBytes(4));
         int dataSize = readInt(4, wav);
-        while (!"data".equals(dataBlocId)) {
+        while (!"data".equals(dataBlocId)) { //Skip blocks that aren't data, for now. Maybe i'll support them later
             wav.skip(dataSize);
             dataBlocId = new String(wav.readNBytes(4));
+            dataSize = readInt(4, wav);
         }
 
 
         double[][] data = new double[numberOfChannels][];
         int bytesPerSample = bitsPerSample / 8;
-        int channelSize = dataSize / (bytePerBloc * numberOfChannels);
+        int channelSize = dataSize / (bytesPerSample * numberOfChannels); //4320000
         Arrays.fill(data, new double[channelSize]);
         for (int i = 0; i < channelSize; i++) {
             for (int n = 0; n < numberOfChannels; n++) {
@@ -111,6 +119,7 @@ public final class WavDecoder {
     }
 
     public static void encode(Track track, OutputStream out, int byteDepth) throws IOException {
+        out = new BufferedOutputStream(out, 1024);
         if (byteDepth > 4 || byteDepth < 1) {
             throw new IllegalArgumentException("Byte depths exceeds allowed value 1-4. Actual: " + byteDepth);
         }
@@ -134,6 +143,7 @@ public final class WavDecoder {
         //[Chunk containing the sampled data]
         write(out, "data");
         write(out, byteDepth * track.getNumOfSamples() * track.getNumOfChannels());
+        log.info("Number of Samples: {}", track.getNumOfSamples());
         for (int i = 0; i < track.getNumOfSamples(); i++) {
             for (int ch = 0; ch < track.getNumOfChannels(); ch++) {
                 write(out, (int) (Math.clamp(track.getSample(ch, i), -1.0, 1.0) * Math.pow(2, byteDepth * 8 - 1)));
