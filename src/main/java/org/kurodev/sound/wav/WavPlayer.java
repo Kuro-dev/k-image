@@ -5,7 +5,8 @@ import lombok.SneakyThrows;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,22 @@ public class WavPlayer {
 
     public WavPlayer(InputStream audio) throws IOException {
         this(Track.of(audio));
+    }
+
+    /**
+     * Returns the length of the track in milliseconds
+     */
+    public int getTrackLength() {
+        return Math.toIntExact(TimeUnit.MICROSECONDS.toMillis(clip.getMicrosecondLength()));
+    }
+
+    /**
+     * Sets the timer to play from the given millisecond position
+     *
+     * @param targetTimeMillis The timestamp in the Track.
+     */
+    public void setTrackPos(int targetTimeMillis) {
+        clip.setMicrosecondPosition(TimeUnit.MILLISECONDS.toMicros(targetTimeMillis));
     }
 
     @SneakyThrows

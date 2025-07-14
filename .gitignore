@@ -3,6 +3,8 @@
 settings.ini
 *.ini
 /logs
+*.wav
+!testWAVs
 
 #project files
 target/

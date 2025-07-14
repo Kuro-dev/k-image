@@ -143,7 +143,6 @@ public final class WavDecoder {
         //[Chunk containing the sampled data]
         write(out, "data");
         write(out, byteDepth * track.getNumOfSamples() * track.getNumOfChannels());
-        log.info("Number of Samples: {}", track.getNumOfSamples());
         for (int i = 0; i < track.getNumOfSamples(); i++) {
             for (int ch = 0; ch < track.getNumOfChannels(); ch++) {
                 write(out, (int) (Math.clamp(track.getSample(ch, i), -1.0, 1.0) * Math.pow(2, byteDepth * 8 - 1)));

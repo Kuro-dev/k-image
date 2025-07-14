@@ -2,6 +2,7 @@ package org.kurodev.sound;
 
 import org.junit.jupiter.api.Test;
 import org.kurodev.sound.wav.Track;
+import org.kurodev.sound.wav.WavPlayer;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +15,7 @@ public class WavTest {
     @Test
     public void test1() throws Exception {
         Track t = Track.of(Files.newInputStream(TEST_FILE_POP));
-        t.encode(Path.of("./pop.wav"));
+        WavPlayer player = new WavPlayer(t);
+        player.playAndWait();
     }
 }
